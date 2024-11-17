@@ -28,24 +28,53 @@ Lexer::Lexer(string code) {
     _position = 0;
 
     _tokenTypesPatterns = {
-        { regex("[+-]?([0-9]*[.])?[0-9]+"), NUMBER },
-        { regex("'[^']*'"), STRING },
-        { regex(";"), SEMICOLON },
-        { regex("\\s+"), WHITESPACE },
-        { regex("[a-zA-Z_][a-zA-Z0-9_]*"), ID },
+        { "[+-]?([0-9]*[.])?[0-9]+", NUMBER },
+        {"'[^']*'", STRING },
+        {";", SEMICOLON },
+        { "\\s+", WHITESPACE },
+        { "[a-zA-Z_][a-zA-Z0-9_]*", ID },
+
+        { "\\(", LBRACKET },
+        { "\\)", RBRACKET },
+
+        { ",", COMMA },
+        { "\\.", DOT },
     };
 }
 
-Token Lexer::nextToken() {
-    if (_position >= _code.length()) return;
+bool Lexer::nextToken() {
+    if (_position < _code.length()) {
+        for (auto v: _tokenTypesPatterns) {
+            string regexString = v.first;
+            TokenType tokenType = v.second;
+            regex rx(regexString);
 
-    for (auto v: _tokenTypesPatterns) {
-        regex rx = v.first;
-        TokenType tokenType = v.second;
-        
-    }
+            string code = _code.substr(_position);
+
+            auto begin = sregex_iterator {code.begin(), code.end(), rx};
+            auto end = sregex_iterator();
+
+            for (sregex_iterator i = begin; i != end; ++i)
+            {
+                cout << "Found " << i->str() << " at position: " << i->position() << endl;
+                
+                string str = i->str();
+                int strLen = str.length();
+                int pos = i->position();
+                int idx = pos + strLen;
+
+               // _tokens.insert(_tokens.begin() + idx, Token(str, tokenType));
+            }
+        }
+    };
+
+    return false;
 }
 
 void Lexer::tokenize() {
+    while (nextToken()) {}
 
+    for (Token v: _tokens) {
+        cout << getTokenTypeString(v.getType()) << " | " << v.getValue() << endl;
+    }
 }

@@ -10,7 +10,7 @@ using namespace std;
 
 class Lexer {
     private:
-        map<regex, TokenType> _tokenTypesPatterns;
+        map<string, TokenType> _tokenTypesPatterns;
 
         vector<Token> _tokens;
         string _code;
@@ -18,7 +18,7 @@ class Lexer {
     public: 
         Lexer(string code);
     
-        Token nextToken();
+        bool nextToken();
         void tokenize();
 };
 
