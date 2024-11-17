@@ -11,10 +11,16 @@ class Token {
     private:
         string _value;
         TokenType _type;
+        int _position;
+        int _endPosition;
     public:
-        Token(string value, TokenType type);
+        Token(string value, TokenType type, int position, int endPosition);
+        
         string getValue();
         TokenType getType();
+
+        int getPosition();
+        int getEndPosition();
 };
 
 #endif

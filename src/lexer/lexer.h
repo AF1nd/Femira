@@ -14,11 +14,9 @@ class Lexer {
 
         vector<Token> _tokens;
         string _code;
-        int _position;
     public: 
         Lexer(string code);
-    
-        bool nextToken();
+
         void tokenize();
 };
 
