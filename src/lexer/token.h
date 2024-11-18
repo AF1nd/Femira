@@ -5,7 +5,35 @@
 
 using namespace std;
 
-enum TokenType { ID, NUMBER, STRING, SEMICOLON, WHITESPACE, LBRACKET, RBRACKET, COMMA, DOT, NEWLINE };
+enum TokenType { 
+    ID, 
+    NUMBER, 
+    STRING, 
+
+    SEMICOLON, 
+    WHITESPACE, 
+    LBRACKET, 
+    RBRACKET, 
+    COMMA, 
+    DOT, 
+    NEWLINE, 
+
+    VAR, 
+    DEF, 
+
+    ASSIGN, 
+    PLUS,
+    MINUS, 
+    MUL, 
+    DIV, 
+    EQ, 
+    NOTEQ, 
+    BIGGER, 
+    SMALLER,
+
+    BEGIN,
+    END,
+};
 
 class Token {
     private:

@@ -7,7 +7,7 @@ int main() {
     const string code =
         R"(
             print('f', 5);
-            key(5);
+            call(5 + 5);
         )";
 
     Lexer newLexer(code);

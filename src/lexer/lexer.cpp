@@ -33,6 +33,32 @@ string getTokenTypeString(int type) {
             return "DOT";
         case NEWLINE:
             return "NEWLINE";
+        case ASSIGN:
+            return "ASSIGN";
+        case PLUS:
+            return "PLUS";
+        case MINUS:
+            return "MINUS";
+        case DIV:
+            return "DIV";
+        case MUL:
+            return "MUL";
+        case VAR:
+            return "VAR";
+        case DEF:
+            return "DEF";
+        case EQ:
+            return "EQ";
+        case NOTEQ:
+            return "NOTEQ";
+        case BIGGER:
+            return "BIGGER";
+        case SMALLER:
+            return "SMALLER";
+        case BEGIN:
+            return "BEGIN";
+        case END:
+            return "END";
         default:
             return "";
     }
@@ -58,7 +84,23 @@ Lexer::Lexer(string code) {
         { "\\.", DOT },
 
         { "[a-zA-Z_][a-zA-Z0-9_]*", ID },
-        { "\n", NEWLINE },
+
+        { "var", VAR },
+        { "def", DEF },
+        { "\\+", PLUS },
+        { "\\-", MINUS },
+        { "\\/", DIV },
+        { "\\*", MUL },
+
+        { "!=", NOTEQ },
+        { "==", EQ },
+        { "=", ASSIGN },
+        
+        { ">", BIGGER },
+        { "<", SMALLER },
+
+        { ":", BEGIN },
+        { "end", END },
     };
 }
 
@@ -88,8 +130,6 @@ void Lexer::tokenize() {
             }
 
             if (block) continue;
-
-            cout << getTokenTypeString(tokenType) << " | " << pos << " | " << endPos << " | " << block << endl;
 
             TokenPositionBusy p;
             p.start = pos;
