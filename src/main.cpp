@@ -4,7 +4,13 @@
 using namespace std;
 
 int main() {
-    Lexer newLexer("print(5, 56, 'f');");
+    const string code =
+        R"(
+            print('f', 5);
+            key(5);
+        )";
+
+    Lexer newLexer(code);
 
     cout << "Femlang started work" << endl;
     newLexer.tokenize();

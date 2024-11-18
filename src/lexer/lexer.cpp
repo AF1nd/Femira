@@ -31,6 +31,8 @@ string getTokenTypeString(int type) {
             return "COMMA";
         case DOT:
             return "DOT";
+        case NEWLINE:
+            return "NEWLINE";
         default:
             return "";
     }
@@ -56,6 +58,7 @@ Lexer::Lexer(string code) {
         { "\\.", DOT },
 
         { "[a-zA-Z_][a-zA-Z0-9_]*", ID },
+        { "\n", NEWLINE },
     };
 }
 
