@@ -95,7 +95,10 @@ Lexer::Lexer(string code) {
         { "!=", NOTEQ },
         { "==", EQ },
         { "=", ASSIGN },
-        
+
+        { ">=", BIGGER_OR_EQ },
+        { "<=", SMALLER_OR_EQ },
+ 
         { ">", BIGGER },
         { "<", SMALLER },
 
@@ -104,7 +107,7 @@ Lexer::Lexer(string code) {
     };
 }
 
-void Lexer::tokenize() {
+vector<Token> Lexer::tokenize() {
     vector<TokenPositionBusy> busy;
 
     for (auto v: _tokenTypesPatterns) {
@@ -143,7 +146,14 @@ void Lexer::tokenize() {
         }
     }
 
-    for (Token v: _tokens) {
+    vector<Token> tokens = {};
+    copy_if(_tokens.begin(), _tokens.end(), std::back_inserter(tokens), [](Token token) {
+        return token.getType() != WHITESPACE && token.getType() != NEWLINE && token.getType() != SEMICOLON;
+    });
+
+    for (Token v: tokens) {
         cout << " [ " + getTokenTypeString(v.getType()) + " ] [ " + v.getValue() + " ] [ " + to_string(v.getPosition()) + " ] [ " + to_string(v.getEndPosition()) + " ] " << endl;
     }
+
+    return tokens;
 }

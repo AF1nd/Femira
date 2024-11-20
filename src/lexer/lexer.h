@@ -3,10 +3,12 @@
 
 #include <iostream>
 #include <vector>
-#include <regex>
+#include <map>
 #include "token.h"
 
 using namespace std;
+
+string getTokenTypeString(int type);
 
 class Lexer {
     private:
@@ -17,7 +19,7 @@ class Lexer {
     public: 
         Lexer(string code);
 
-        void tokenize();
+        vector<Token> tokenize();
 };
 
 #endif

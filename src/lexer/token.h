@@ -30,6 +30,8 @@ enum TokenType {
     NOTEQ, 
     BIGGER, 
     SMALLER,
+    BIGGER_OR_EQ,
+    SMALLER_OR_EQ,
 
     BEGIN,
     END,
@@ -43,6 +45,7 @@ class Token {
         int _endPosition;
     public:
         Token(string value, TokenType type, int position, int endPosition);
+        Token() = default;
         
         string getValue();
         TokenType getType();
