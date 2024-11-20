@@ -11,7 +11,7 @@ int main() {
 
     const string code =
         R"(
-            call();
+            printf(5, 'faa');
         )";
 
     Lexer newLexer(code);
@@ -20,12 +20,12 @@ int main() {
 
     Parser newParser(tokens);
 
-    BlockNode ast = newParser.parse();
+    BlockNode* ast = newParser.parse();
 
     cout << "AST:" << endl;
 
-    for (AstNode v: ast.nodes) {
-        cout << v.tostr() << endl;
+    for (AstNode* v: ast->nodes) {
+        cout << v->tostr() << endl;
     }
 
     return 0;

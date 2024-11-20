@@ -7,13 +7,14 @@
 
 using namespace std;
 
+
 Parser::Parser(vector<Token> tokens) {
     _tokens = tokens;
     _position = 0;
 }
 
 Token Parser::match(vector<TokenType> tokenTypes) {
-     if (_position >= _tokens.size()) {
+    if (_position >= _tokens.size()) {
         throw runtime_error("Position out of bounds");
     }
     
@@ -38,24 +39,29 @@ Token Parser::match(vector<TokenType> tokenTypes) {
     throw runtime_error("Unexpected token type, expected: " + str + ", given: " + getTokenTypeString(currentToken.getType()) + ", position: " + to_string(_position));
 }
 
-BlockNode Parser::parse() {
-    BlockNode block;
+BlockNode* Parser::parse() {
+    BlockNode* block = new BlockNode();
 
     while (_position < _tokens.size()) {
-        AstNode parsed = parseExpression();
-        AstNode* ptr = &parsed;
+        AstNode* ptr = parseExpression();
+
         if (ptr == NULL) {
-            throw runtime_error("Syntax error");
             break;
-        } else block.nodes.insert(block.nodes.end(), parsed);
+        } else block->nodes.push_back(ptr);
     }
 
     return block;
 }
 
-AstNode Parser::parseExpression() {
+AstNode* Parser::parseExpression() {
     try {
         return parseCall();
+    } catch (const runtime_error&) {
+      
+    }
+
+    try {
+        return parseLiteral();
     } catch (const runtime_error&) {
       
     }
@@ -63,89 +69,97 @@ AstNode Parser::parseExpression() {
     throw runtime_error("Syntax error: Unable to parse expression at position " + to_string(_position));
 }
 
-LiteralNode Parser::parseLiteral() {
+LiteralNode* Parser::parseLiteral() {
     Token token = match({ STRING, NUMBER });
 
-    LiteralNode node;
-    node.token = token;
+    LiteralNode* node = new LiteralNode();
+    node->token = token;
     
     return node;
 }
 
-BlockNode Parser::parseBlock() {
+BlockNode* Parser::parseBlock() {
     Token begin = match({ BEGIN });
 
-    vector<AstNode> blockNodes = {};
+    vector<AstNode*> blockNodes = {};
 
     for (int i = _position; i < _tokens.size(); i++) {
-        Token atPos = _tokens.at(i);
+        if ((_position) >= _tokens.size()) break;
+
+        Token atPos = _tokens.at(_position);
         if (atPos.getType() == END) break;
 
-        blockNodes.insert(blockNodes.end(), parseExpression());
+        AstNode* ptr = parseExpression();
+
+        blockNodes.push_back(ptr);
         _position++;
     }
 
     Token end = match({ END });
 
-    BlockNode block;
-    block.nodes = blockNodes;
+    BlockNode* block = new BlockNode();
+    block->nodes = blockNodes;
 
     return block;
 };
 
-BinaryOperationNode Parser::parseBinaryOperation() {
-    AstNode left = parseExpression();
+BinaryOperationNode* Parser::parseBinaryOperation() {
+    AstNode* left = parseExpression();
 
     Token operatorToken = match({ MUL, DIV, PLUS, MINUS, EQ, NOTEQ, BIGGER, SMALLER, BIGGER_OR_EQ, SMALLER_OR_EQ });
 
-    AstNode right = parseExpression();
+    AstNode* right = parseExpression();
 
-    BinaryOperationNode node;
+    BinaryOperationNode* node = new BinaryOperationNode();
     
-    node.left = left;
-    node.operatorToken = operatorToken;
-    node.right = right;
+    node->left = left;
+    node->operatorToken = operatorToken;
+    node->right = right;
 
     return node;
 };
 
-CallNode Parser::parseCall() {
-    AstNode calling = parseIdentifier();
-    ArgsNode args = parseArgs();
+CallNode* Parser::parseCall() {
+    AstNode* calling = parseIdentifier();
+    ArgsNode* args = parseArgs();
 
-    CallNode node;
-    node.args = args;
-    node.calling = calling;
+    CallNode* node = new CallNode();
+    node->args = args;
+    node->calling = calling;
 
     return node;
 };
 
-ArgsNode Parser::parseArgs() {
+ArgsNode* Parser::parseArgs() {
     Token lbracket = match({ LBRACKET });
 
-    vector<AstNode> args = {};
+    vector<AstNode*> args = {};
 
     for (int i = _position; i < _tokens.size(); i++) {
-        Token atPos = _tokens.at(i);
+        Token atPos = _tokens.at(_position);
         if (atPos.getType() == RBRACKET) break;
 
-        args.insert(args.end(), parseExpression());
-        _position++;
+        if (args.size() > 0) match({ COMMA });
+
+        AstNode* ptr = parseExpression();
+        if (ptr == NULL) break;
+
+        args.push_back(ptr);
     }
 
     Token rbracket = match({ RBRACKET });
 
-    ArgsNode node;
-    node.nodes = args;
+    ArgsNode* node = new ArgsNode();
+    node->nodes = args;
 
     return node;
 }
 
-IdentifierNode Parser::parseIdentifier() {
+IdentifierNode* Parser::parseIdentifier() {
     Token token = match({ ID });
 
-    IdentifierNode node;
-    node.token = token;
+    IdentifierNode* node = new IdentifierNode();
+    node->token = token;
 
     return node;
 }
