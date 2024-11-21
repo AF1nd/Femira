@@ -11,7 +11,11 @@ int main() {
 
     const string code =
         R"(
-            printf(5, 'faa');
+            printf(5 + 5 - 5)
+
+            def fn():
+                printf(5)
+            end
         )";
 
     Lexer newLexer(code);

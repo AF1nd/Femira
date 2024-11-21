@@ -83,10 +83,6 @@ Lexer::Lexer(string code) {
         { ",", COMMA },
         { "\\.", DOT },
 
-        { "[a-zA-Z_][a-zA-Z0-9_]*", ID },
-
-        { "var", VAR },
-        { "def", DEF },
         { "\\+", PLUS },
         { "\\-", MINUS },
         { "\\/", DIV },
@@ -104,15 +100,20 @@ Lexer::Lexer(string code) {
 
         { ":", BEGIN },
         { "end", END },
+        { "var", VAR },
+        { "def", DEF },
+
+        { "[a-zA-Z_][a-zA-Z0-9_]*", ID },
     };
 }
 
 vector<Token> Lexer::tokenize() {
     vector<TokenPositionBusy> busy;
 
-    for (auto v: _tokenTypesPatterns) {
+    for (pair<string, TokenType> v: _tokenTypesPatterns) {
         string regexString = v.first;
         TokenType tokenType = v.second;
+
         regex rx(regexString);
 
         auto begin = sregex_iterator {_code.begin(), _code.end(), rx};
@@ -121,7 +122,14 @@ vector<Token> Lexer::tokenize() {
         for (sregex_iterator i = begin; i != end; ++i) {
             sort(_tokens.begin(), _tokens.end(), compareTokens);
 
+            TokenType tokenTypeDynamic = tokenType;
+
             string str = i->str();
+
+            for (pair<string, TokenType> pattern: _tokenTypesPatterns) {
+                if (pattern.first == str && pattern != v) { tokenTypeDynamic = pattern.second; }
+            }
+
             int strLen = str.length();
             int pos = i->position();
             int endPos = pos + strLen;
@@ -140,7 +148,7 @@ vector<Token> Lexer::tokenize() {
 
             busy.push_back(p);
 
-            Token token(str, tokenType, pos, endPos);
+            Token token(str, tokenTypeDynamic, pos, endPos);
 
             _tokens.push_back(token);
         }

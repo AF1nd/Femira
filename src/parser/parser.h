@@ -13,6 +13,15 @@ struct AstNode {
 
 struct ArgsNode: AstNode {
     vector<AstNode*> nodes;
+    string tostr() override {
+        string str = "";
+
+        for (AstNode* arg: nodes) {
+            str += arg->tostr();
+        }
+
+        return str;
+    }
 };
 
 struct LiteralNode : AstNode {
@@ -20,13 +29,23 @@ struct LiteralNode : AstNode {
     LiteralNode() = default;
 
     string tostr() override {
-        return "[ literal: " + token.getValue() + " ] ";
+        return "[ literal: " + token.getValue() + " ]";
     }
 };
 
 struct BlockNode : AstNode {
     vector<AstNode*> nodes;
     BlockNode() = default;
+
+    string tostr() override {
+        string str = "";
+
+        for (AstNode* node: nodes) {
+            str += " >" + node->tostr() + "\n";
+        }
+
+        return "\n[ block: \n" + str + " \n]";
+    }
 };
 
 struct BinaryOperationNode : AstNode {
@@ -34,22 +53,10 @@ struct BinaryOperationNode : AstNode {
     AstNode* right;
     Token operatorToken;
     BinaryOperationNode() = default;
-};
 
-struct CallNode : public AstNode {
     string tostr() override {
-        string str = "";
-
-        for (AstNode* arg: args->nodes) {
-            str += arg->tostr() + " ";
-        }
-
-        return "[ call: " + calling->tostr() + " | " + str + " ]";
-    };
-
-    AstNode* calling;
-    ArgsNode* args;
-    CallNode() = default;
+        return "[ binary: " + operatorToken.getValue() + " | " + left->tostr() + " | " + right->tostr() + " ]";
+    }
 };
 
 struct IdentifierNode : AstNode {
@@ -61,6 +68,37 @@ struct IdentifierNode : AstNode {
     }
 };
 
+struct CallNode : AstNode {
+    string tostr() override {
+        return "[ call: " + calling->tostr() + " | " + args->tostr() + " ]";
+    };
+
+    AstNode* calling;
+    ArgsNode* args;
+    CallNode() = default;
+};
+
+struct ParenthisizedNode : AstNode {
+    AstNode* wrapped;
+    ParenthisizedNode() = default;
+
+    string tostr() override {
+        return "[ parenthisized: " + wrapped->tostr() + " ]";
+    };
+};
+
+struct FnDefineNode : AstNode {
+    IdentifierNode* id;
+    ArgsNode* args;
+    BlockNode* block;
+
+    FnDefineNode() = default;
+
+    string tostr() override {
+        return "[ func: " + id->tostr() + " | " + args->tostr() + " | " + block->tostr() + " ]";
+    };
+};
+
 class Parser {
     private:
         vector<Token> _tokens;
@@ -69,14 +107,18 @@ class Parser {
         Parser(vector<Token> tokens);
         BlockNode* parse();
 
-        Token match(vector<TokenType> tokenTypes);
-        bool isCurrentToken(vector<TokenType> tokenTypes);
+        bool match(vector<TokenType> tokenTypes);
+        bool lookMatch(vector<TokenType> tokenTypes, int offset);
+        Token consume(vector<TokenType> tokenTypes);
         
         AstNode* parseExpression();
+        AstNode* parseExpression(vector<string> exclude);
+        
         IdentifierNode* parseIdentifier();
         LiteralNode* parseLiteral();
         BlockNode* parseBlock();
         BinaryOperationNode* parseBinaryOperation();
+        FnDefineNode* parseFunctionDefinition();
         CallNode* parseCall();
         ArgsNode* parseArgs();
 };
