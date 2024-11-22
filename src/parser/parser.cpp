@@ -78,12 +78,15 @@ BlockNode* Parser::parse() {
 AstNode* Parser::parseExpression() {
     AstNode* node = nullptr;
 
+    if (match({ DEF })) node = parseFunctionDefinition();
     if (match({ ID })) {
         IdentifierNode* idNode = parseIdentifier();
-        if (lookMatch({ LBRACKET }, 1)) node = parseCall(idNode);
+        if (match({ LBRACKET })) {
+            cout << true << endl;
+            node = parseCall(idNode);
+        }
         else node = idNode;
     };
-    if (match({ DEF })) node = parseFunctionDefinition();
     if (match({ STRING, NUMBER })) {
         node = parseLiteral();
     };
