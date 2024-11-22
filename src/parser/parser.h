@@ -73,7 +73,7 @@ struct CallNode : AstNode {
         return "[ call: " + calling->tostr() + " | " + args->tostr() + " ]";
     };
 
-    AstNode* calling;
+    IdentifierNode* calling;
     ArgsNode* args;
     CallNode() = default;
 };
@@ -112,14 +112,15 @@ class Parser {
         Token consume(vector<TokenType> tokenTypes);
         
         AstNode* parseExpression();
-        AstNode* parseExpression(vector<string> exclude);
         
         IdentifierNode* parseIdentifier();
+
+        ParenthisizedNode* parseParenthisized();
         LiteralNode* parseLiteral();
         BlockNode* parseBlock();
-        BinaryOperationNode* parseBinaryOperation();
+        BinaryOperationNode* parseBinaryOperation(AstNode* left);
         FnDefineNode* parseFunctionDefinition();
-        CallNode* parseCall();
+        CallNode* parseCall(IdentifierNode* calling);
         ArgsNode* parseArgs();
 };
 

@@ -7,7 +7,6 @@
 
 using namespace std;
 
-
 Parser::Parser(vector<Token> tokens) {
     _tokens = tokens;
     _position = 0;
@@ -15,11 +14,10 @@ Parser::Parser(vector<Token> tokens) {
 
 Token Parser::consume(vector<TokenType> tokenTypes) {
     if (_position >= _tokens.size()) {
-        throw runtime_error("Position out of bounds");
+        throw runtime_error("Position out of bounds (c)");
     }
     
     Token currentToken = _tokens.at(_position);
-
     if (find(tokenTypes.begin(), tokenTypes.end(), currentToken.getType()) != tokenTypes.end()) {
         _position++;
         return currentToken;
@@ -41,12 +39,9 @@ Token Parser::consume(vector<TokenType> tokenTypes) {
 }
 
 bool Parser::match(vector<TokenType> tokenTypes) {
-    if (_position >= _tokens.size()) {
-        throw runtime_error("Position out of bounds");
-    }
+    if (_position >= _tokens.size()) return false;
     
     Token currentToken = _tokens.at(_position);
-
     if (find(tokenTypes.begin(), tokenTypes.end(), currentToken.getType()) != tokenTypes.end()) {
         return true;
     }
@@ -57,12 +52,9 @@ bool Parser::match(vector<TokenType> tokenTypes) {
 bool Parser::lookMatch(vector<TokenType> tokenTypes, int offset) {
     int position = _position + offset;
 
-    if (position >= _tokens.size()) {
-        throw runtime_error("Position out of bounds");
-    }
+    if (position >= _tokens.size()) return false;
     
     Token currentToken = _tokens.at(position);
-
     if (find(tokenTypes.begin(), tokenTypes.end(), currentToken.getType()) != tokenTypes.end()) {
         return true;
     }
@@ -83,41 +75,48 @@ BlockNode* Parser::parse() {
     return block;
 }
 
-AstNode* Parser::parseExpression(vector<string> exclude) {
-    if (match({ STRING, NUMBER })) {
-        if (lookMatch({ MUL, DIV, PLUS, MINUS, EQ, NOTEQ, BIGGER, SMALLER, BIGGER_OR_EQ, SMALLER_OR_EQ }, 1) && count(exclude.begin(), exclude.end(), "bin") <= 0) return parseBinaryOperation();
-        else return parseLiteral();
-    };
-    if (match({ ID })) {
-        if (lookMatch({ LBRACKET }, 1) && count(exclude.begin(), exclude.end(), "call") <= 0) return parseCall();
-        else return parseIdentifier();
-    };
-    if (match({ DEF })) return parseFunctionDefinition();
-
-    return 0;
-}
-
 AstNode* Parser::parseExpression() {
-    if (match({ STRING, NUMBER })) {
-        if (lookMatch({ MUL, DIV, PLUS, MINUS, EQ, NOTEQ, BIGGER, SMALLER, BIGGER_OR_EQ, SMALLER_OR_EQ }, 1)) return parseBinaryOperation();
-        else return parseLiteral();
-    };
-    if (match({ ID })) {
-        if (lookMatch({ LBRACKET }, 1)) return parseCall();
-        else return parseIdentifier();
-    };
-    if (match({ DEF })) return parseFunctionDefinition();
+    AstNode* node = nullptr;
 
-    return 0;
+    if (match({ ID })) {
+        IdentifierNode* idNode = parseIdentifier();
+        if (lookMatch({ LBRACKET }, 1)) node = parseCall(idNode);
+        else node = idNode;
+    };
+    if (match({ DEF })) node = parseFunctionDefinition();
+    if (match({ STRING, NUMBER })) {
+        node = parseLiteral();
+    };
+    if (match({ LBRACKET })) node = parseParenthisized();
+
+    if (node) {
+        if (match({ MUL, DIV, PLUS, MINUS, EQ, NOTEQ, BIGGER, SMALLER, BIGGER_OR_EQ, SMALLER_OR_EQ })) {
+            node = parseBinaryOperation(node);
+        }
+    }
+
+    return node;
 }
 
+ParenthisizedNode* Parser::parseParenthisized() {
+    consume({ LBRACKET });
+
+    AstNode* expr = parseExpression();
+
+    ParenthisizedNode* node = new ParenthisizedNode();
+    node->wrapped = expr;
+
+    consume({ RBRACKET });
+
+    return node;
+}
 
 LiteralNode* Parser::parseLiteral() {
     Token token = consume({ STRING, NUMBER });
 
     LiteralNode* node = new LiteralNode();
     node->token = token;
-    
+
     return node;
 }
 
@@ -141,9 +140,7 @@ BlockNode* Parser::parseBlock() {
     return block;
 };
 
-BinaryOperationNode* Parser::parseBinaryOperation() {
-    AstNode* left = parseExpression({ "bin" });
-
+BinaryOperationNode* Parser::parseBinaryOperation(AstNode* left) {
     Token operatorToken = consume({ MUL, DIV, PLUS, MINUS, EQ, NOTEQ, BIGGER, SMALLER, BIGGER_OR_EQ, SMALLER_OR_EQ });
 
     AstNode* right = parseExpression();
@@ -157,8 +154,7 @@ BinaryOperationNode* Parser::parseBinaryOperation() {
     return node;
 };
 
-CallNode* Parser::parseCall() {
-    AstNode* calling = parseExpression({ "call" });
+CallNode* Parser::parseCall(IdentifierNode* calling) {
     ArgsNode* args = parseArgs();
 
     CallNode* node = new CallNode();
@@ -173,13 +169,12 @@ ArgsNode* Parser::parseArgs() {
 
     vector<AstNode*> args = {};
 
-    while (_tokens.at(_position).getType() != RBRACKET) {
-        if (!args.empty()) consume({ COMMA });
+    while (!match({ RBRACKET })) {
+        AstNode* expr = parseExpression();
+        
+        if (expr != nullptr) args.push_back(expr);
 
-        AstNode* ptr = parseExpression();
-        if (ptr == nullptr) break;
-
-        args.push_back(ptr);
+        if (match({ COMMA })) consume({ COMMA });
     }
 
     consume({ RBRACKET });
