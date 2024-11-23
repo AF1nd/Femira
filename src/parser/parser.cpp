@@ -35,8 +35,20 @@ Parser::Parser(vector<Token> tokens) {
 }
 
 Token Parser::consume(vector<TokenType> tokenTypes) {
+    vector<string> types = {};
+
+    for (TokenType v: tokenTypes) {
+        types.push_back(getTokenTypeString(v));
+    }
+
+    string expectedStr = "";
+
+    for (string v: types) {
+        expectedStr += v + " ";
+    }
+
     if (_position >= _tokens.size()) {
-        throw runtime_error("Position out of bounds (c)");
+        throw runtime_error("In the end of file expected token: " + expectedStr);
     }
     
     Token currentToken = _tokens.at(_position);
@@ -45,19 +57,7 @@ Token Parser::consume(vector<TokenType> tokenTypes) {
         return currentToken;
     }
 
-    vector<string> types = {};
-
-    for (TokenType v: tokenTypes) {
-        types.push_back(getTokenTypeString(v));
-    }
-
-    string str = "";
-
-    for (string v: types) {
-        str += v + " ";
-    }
-    
-    throw runtime_error("Unexpected token type, expected: " + str + ", given: " + getTokenTypeString(currentToken.getType()) + ", position: " + to_string(_position));
+    throw runtime_error("Unexpected token type, expected: " + expectedStr + ", given: " + getTokenTypeString(currentToken.getType()) + ", position: " + to_string(_position));
 }
 
 bool Parser::match(vector<TokenType> tokenTypes) {
@@ -92,6 +92,8 @@ BlockNode* Parser::parse() {
         if (expr == nullptr) break;
 
         block->nodes.push_back(expr);
+
+        if (match({ SEMICOLON })) consume({ SEMICOLON });
     }
 
     return block;
@@ -102,11 +104,7 @@ AstNode* Parser::parseExpression() {
 
     if (match({ DEF })) node = parseFunctionDefinition();
     if (match({ ID }) && !node) {
-        IdentifierNode* idNode = parseIdentifier();
-        if (match({ LBRACKET })) {
-            node = parseCall(idNode);
-        }
-        else node = idNode;
+        node = parseIdentifier();
     };
     if (match(literalTokens) && !node) {
         node = parseLiteral();
@@ -117,6 +115,7 @@ AstNode* Parser::parseExpression() {
     if (match({ LBRACKET }) && !node) node = parseParenthisized();
 
     if (node) {
+        if (match({ LBRACKET })) node = parseCall(node);
         if (match(binaryOperationsTokens)) {
             node = parseBinaryOperation(node);
         }
@@ -169,6 +168,8 @@ BlockNode* Parser::parseBlock() {
         if (ptr == nullptr) break;
 
         blockNodes.push_back(ptr);
+
+        if (match({ SEMICOLON })) consume({ SEMICOLON });
     }
 
     Token end = consume({ END });
@@ -193,7 +194,7 @@ BinaryOperationNode* Parser::parseBinaryOperation(AstNode* left) {
     return node;
 };
 
-CallNode* Parser::parseCall(IdentifierNode* calling) {
+CallNode* Parser::parseCall(AstNode* calling) {
     ArgsNode* args = parseArgs();
 
     CallNode* node = new CallNode();

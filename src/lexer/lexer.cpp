@@ -159,7 +159,7 @@ vector<Token> Lexer::tokenize() {
 
     vector<Token> tokens = {};
     copy_if(_tokens.begin(), _tokens.end(), std::back_inserter(tokens), [](Token token) {
-        return token.getType() != WHITESPACE && token.getType() != NEWLINE && token.getType() != SEMICOLON;
+        return token.getType() != WHITESPACE && token.getType() != NEWLINE;
     });
 
     for (Token v: tokens) {

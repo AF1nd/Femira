@@ -13,9 +13,9 @@ int main() {
         R"(
             def foo(arg):
                 return arg
-            end
+            end;
 
-            print(foo(5))
+            (print)(foo(5))
         )";
 
     Lexer newLexer(code);

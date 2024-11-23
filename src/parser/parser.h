@@ -84,7 +84,7 @@ struct CallNode : AstNode {
         return "[ call: " + calling->tostr() + " | " + args->tostr() + " ]";
     };
 
-    IdentifierNode* calling;
+    AstNode* calling;
     ArgsNode* args;
     CallNode() = default;
 };
@@ -135,7 +135,7 @@ class Parser {
         BlockNode* parseBlock();
         BinaryOperationNode* parseBinaryOperation(AstNode* left);
         FnDefineNode* parseFunctionDefinition();
-        CallNode* parseCall(IdentifierNode* calling);
+        CallNode* parseCall(AstNode* calling);
         ArgsNode* parseArgs();
         UnaryOperationNode* parseUnaryOperation();
 };
