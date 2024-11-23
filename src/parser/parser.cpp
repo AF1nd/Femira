@@ -10,6 +10,28 @@ using namespace std;
 Parser::Parser(vector<Token> tokens) {
     _tokens = tokens;
     _position = 0;
+
+    unaryOperationsTokens = {
+        RETURN,
+    };
+
+    binaryOperationsTokens = {
+        MUL,
+        DIV,
+        PLUS, 
+        MINUS, 
+        EQ, 
+        NOTEQ, 
+        BIGGER, 
+        SMALLER, 
+        BIGGER_OR_EQ, 
+        SMALLER_OR_EQ,
+    };
+
+    literalTokens = {
+        STRING,
+        NUMBER,
+    };
 }
 
 Token Parser::consume(vector<TokenType> tokenTypes) {
@@ -79,21 +101,23 @@ AstNode* Parser::parseExpression() {
     AstNode* node = nullptr;
 
     if (match({ DEF })) node = parseFunctionDefinition();
-    if (match({ ID })) {
+    if (match({ ID }) && !node) {
         IdentifierNode* idNode = parseIdentifier();
         if (match({ LBRACKET })) {
-            cout << true << endl;
             node = parseCall(idNode);
         }
         else node = idNode;
     };
-    if (match({ STRING, NUMBER })) {
+    if (match(literalTokens) && !node) {
         node = parseLiteral();
     };
-    if (match({ LBRACKET })) node = parseParenthisized();
+    if (match(unaryOperationsTokens) && !node) {
+        node = parseUnaryOperation();
+    };
+    if (match({ LBRACKET }) && !node) node = parseParenthisized();
 
     if (node) {
-        if (match({ MUL, DIV, PLUS, MINUS, EQ, NOTEQ, BIGGER, SMALLER, BIGGER_OR_EQ, SMALLER_OR_EQ })) {
+        if (match(binaryOperationsTokens)) {
             node = parseBinaryOperation(node);
         }
     }
@@ -115,10 +139,22 @@ ParenthisizedNode* Parser::parseParenthisized() {
 }
 
 LiteralNode* Parser::parseLiteral() {
-    Token token = consume({ STRING, NUMBER });
+    Token token = consume(literalTokens);
 
     LiteralNode* node = new LiteralNode();
     node->token = token;
+
+    return node;
+}
+
+
+UnaryOperationNode* Parser::parseUnaryOperation() {
+    Token operatorToken = consume(unaryOperationsTokens);
+    AstNode* expr = parseExpression();
+
+    UnaryOperationNode* node = new UnaryOperationNode();
+    node->operrand = expr;
+    node->operatorToken = operatorToken;
 
     return node;
 }
@@ -144,7 +180,7 @@ BlockNode* Parser::parseBlock() {
 };
 
 BinaryOperationNode* Parser::parseBinaryOperation(AstNode* left) {
-    Token operatorToken = consume({ MUL, DIV, PLUS, MINUS, EQ, NOTEQ, BIGGER, SMALLER, BIGGER_OR_EQ, SMALLER_OR_EQ });
+    Token operatorToken = consume(binaryOperationsTokens);
 
     AstNode* right = parseExpression();
 
@@ -194,6 +230,8 @@ FnDefineNode* Parser::parseFunctionDefinition() {
     IdentifierNode* id = parseIdentifier();
     ArgsNode* args = parseArgs();
     BlockNode* block = parseBlock();
+
+    cout << id->tostr() << endl;
 
     FnDefineNode* node = new FnDefineNode();
     node->args = args;

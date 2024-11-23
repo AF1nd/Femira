@@ -59,6 +59,8 @@ string getTokenTypeString(int type) {
             return "BEGIN";
         case END:
             return "END";
+        case RETURN:
+            return "RETURN";
         default:
             return "";
     }
@@ -102,6 +104,7 @@ Lexer::Lexer(string code) {
         { "end", END },
         { "var", VAR },
         { "def", DEF },
+        { "return", RETURN },
 
         { "[a-zA-Z_][a-zA-Z0-9_]*", ID },
     };

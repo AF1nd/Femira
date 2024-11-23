@@ -20,6 +20,7 @@ enum TokenType {
 
     VAR, 
     DEF, 
+    RETURN,
 
     ASSIGN, 
     PLUS,

@@ -11,7 +11,18 @@ struct AstNode {
     virtual string tostr() { return "unknown"; };
 };
 
-struct ArgsNode: AstNode {
+struct UnaryOperationNode : AstNode {
+    AstNode* operrand;
+    Token operatorToken;
+
+    UnaryOperationNode() = default;
+
+    string tostr() override {
+        return "[ unary: " + operatorToken.getValue() + ": " + operrand->tostr() + " ]";
+    }
+};
+
+struct ArgsNode : AstNode {
     vector<AstNode*> nodes;
     string tostr() override {
         string str = "";
@@ -41,10 +52,10 @@ struct BlockNode : AstNode {
         string str = "";
 
         for (AstNode* node: nodes) {
-            str += " >" + node->tostr() + "\n";
+            str += "  > " + node->tostr() + "\n";
         }
 
-        return "\n[ block: \n" + str + " \n]";
+        return "\n block: \n" + str + " end";
     }
 };
 
@@ -55,7 +66,7 @@ struct BinaryOperationNode : AstNode {
     BinaryOperationNode() = default;
 
     string tostr() override {
-        return "[ binary: " + operatorToken.getValue() + " | " + left->tostr() + " | " + right->tostr() + " ]";
+        return "[ binary: "  + left->tostr() + " " + operatorToken.getValue() + " " + right->tostr() + " ]";
     }
 };
 
@@ -95,7 +106,7 @@ struct FnDefineNode : AstNode {
     FnDefineNode() = default;
 
     string tostr() override {
-        return "[ func: " + id->tostr() + " | " + args->tostr() + " | " + block->tostr() + " ]";
+        return "[ func: " + id->tostr() + " | " + args->tostr() + " | " + block->tostr() + " \n]";
     };
 };
 
@@ -103,6 +114,10 @@ class Parser {
     private:
         vector<Token> _tokens;
         int _position;
+
+        vector<TokenType> unaryOperationsTokens;
+        vector<TokenType> binaryOperationsTokens;
+        vector<TokenType> literalTokens;
     public: 
         Parser(vector<Token> tokens);
         BlockNode* parse();
@@ -122,6 +137,7 @@ class Parser {
         FnDefineNode* parseFunctionDefinition();
         CallNode* parseCall(IdentifierNode* calling);
         ArgsNode* parseArgs();
+        UnaryOperationNode* parseUnaryOperation();
 };
 
 #endif
