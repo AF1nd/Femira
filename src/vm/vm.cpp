@@ -8,8 +8,8 @@
 
 using namespace std;
 
-FVM::FVM(vector<int> FVM_BYTECODE) {
-    bytecode = FVM_BYTECODE;
+FVM::FVM(vector<int> VM_BYTECODE) {
+    bytecode = VM_BYTECODE;
 }
 
 void FVM::run() {
@@ -17,7 +17,8 @@ void FVM::run() {
         int instruction = bytecode.at(i);
 
         switch (instruction) {
-            case B_PUSH: {
+            case B_PUSH:
+                {
                     int value = bytecode.at(i + 1);
                     i++;
 
@@ -50,4 +51,14 @@ int FVM::pop() {
     vmStack.pop();
 
     return val;
+}
+
+string FVM::readBytecode() {
+    string str = "";
+
+    for (int code: bytecode) {
+        str += to_string(code) + " ";
+    }
+
+    return str;
 }

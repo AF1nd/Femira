@@ -11,6 +11,7 @@ using namespace std;
 
 enum Bytecode {
     B_PUSH,
+    B_TOSTRING,
     B_ADD,
     B_SUB,
     B_MUL,
@@ -28,6 +29,7 @@ class FVM {
         
         void run();
         int pop();
+        string readBytecode();
 };
 
 #endif

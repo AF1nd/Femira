@@ -39,7 +39,10 @@ int main() {
 
     cout << "VM:" << endl;
 
-    FVM newVM({ B_PUSH, 5, B_PUSH, 6, B_ADD, B_PRINT });
+    FVM newVM({ B_PUSH, 5, B_PUSH, 5, B_PRINT });
+
+    cout << "BYTECODE: " << newVM.readBytecode() << endl;
+
     newVM.run();
 
     return 0;
