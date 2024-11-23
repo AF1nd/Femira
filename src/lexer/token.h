@@ -17,10 +17,11 @@ enum TokenType {
     COMMA, 
     DOT, 
     NEWLINE, 
-
-    VAR, 
+ 
     DEF, 
+
     RETURN,
+    DELAY,
 
     ASSIGN, 
     PLUS,

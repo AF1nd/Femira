@@ -11,9 +11,13 @@ int main() {
 
     const string code =
         R"(
+            a = 5
+
             def foo(arg):
                 return arg
-            end;
+            end
+
+            delay 5;
 
             (print)(foo(5))
         )";

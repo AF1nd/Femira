@@ -43,8 +43,6 @@ string getTokenTypeString(int type) {
             return "DIV";
         case MUL:
             return "MUL";
-        case VAR:
-            return "VAR";
         case DEF:
             return "DEF";
         case EQ:
@@ -61,6 +59,8 @@ string getTokenTypeString(int type) {
             return "END";
         case RETURN:
             return "RETURN";
+        case DELAY:
+            return "DELAY";
         default:
             return "";
     }
@@ -102,9 +102,9 @@ Lexer::Lexer(string code) {
 
         { ":", BEGIN },
         { "end", END },
-        { "var", VAR },
         { "def", DEF },
         { "return", RETURN },
+        { "delay", DELAY },
 
         { "[a-zA-Z_][a-zA-Z0-9_]*", ID },
     };
