@@ -103,6 +103,7 @@ Lexer::Lexer(string code) {
         { ":", BEGIN },
         { "end", END },
         { "def", DEF },
+
         { "return", RETURN },
         { "delay", DELAY },
 
