@@ -13,9 +13,9 @@ int main() {
 
     const string code =
         R"(
-            delay 2;
+            a = 2
 
-            println(5 + 5.2)
+            println(a)
         )";
 
     Lexer newLexer(code);
@@ -35,10 +35,7 @@ int main() {
     Compiler compiler(ast);
     FVM vm(compiler.generateBytecode());
 
-    cout << "<VM STARTED RUNNING:>" << endl;
-
-    cout << " > BYTECODE: " << vm.readBytecode() << endl;
-
+    cout << vm.readBytecode() << endl;
     vm.run();
 
     return 0;

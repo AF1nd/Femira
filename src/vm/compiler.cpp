@@ -7,10 +7,31 @@
 
 vector<Instruction> bytecodeFromNode(AstNode* node) {
     if (auto* binaryOperation = dynamic_cast<BinaryOperationNode*>(node)) {
-        vector<Instruction> left = bytecodeFromNode(binaryOperation->left);
         vector<Instruction> right = bytecodeFromNode(binaryOperation->right);
+        TokenType operatorType = binaryOperation->operatorToken.getType();
 
         vector<Instruction> bytecode = {};
+
+        if (operatorType == ASSIGN) {
+            if (auto* identifier = dynamic_cast<IdentifierNode*>(binaryOperation->left)) {
+                bytecode.push_back({
+                    code: B_PUSH,
+                    arg: identifier->token.getValue()
+                });
+                
+                for (Instruction instr: right) {
+                    bytecode.push_back(instr);
+                }  
+
+                bytecode.push_back({
+                    code: B_ASSIGN
+                });
+
+                return bytecode;
+            }
+        }
+
+        vector<Instruction> left = bytecodeFromNode(binaryOperation->left);
 
         for (Instruction instr: left) {
             bytecode.push_back(instr);
@@ -19,8 +40,6 @@ vector<Instruction> bytecodeFromNode(AstNode* node) {
         for (Instruction instr: right) {
             bytecode.push_back(instr);
         }
-
-        TokenType operatorType = binaryOperation->operatorToken.getType();
         
         if (operatorType == PLUS) {
             bytecode.push_back({
@@ -41,6 +60,8 @@ vector<Instruction> bytecodeFromNode(AstNode* node) {
         }
 
         return bytecode;
+    } else if (auto* identifier = dynamic_cast<IdentifierNode*>(node)) {
+        return { { code: B_LOAD, arg: identifier->token.getValue() } };
     } else if (auto* literal = dynamic_cast<LiteralNode*>(node)) {
         string val = literal->token.getValue();
 

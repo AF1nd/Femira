@@ -15,9 +15,11 @@ enum Bytecode {
     B_SUB,
     B_MUL,
     B_DIV,
+    B_ASSIGN,
     B_PRINT,
     B_HALT,
     B_DELAY,
+    B_LOAD,
 };
 
 struct Instruction {
@@ -30,6 +32,7 @@ class FVM {
         vector<Instruction> bytecode;
     public:
         stack<variant<double, string>> vmStack;
+        map<string, variant<double, string>> memory;
 
         FVM(vector<Instruction> bytecode);
         
