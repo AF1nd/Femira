@@ -13,7 +13,9 @@ int main() {
 
     const string code =
         R"(
-            println(5 + 5 + 5)
+            delay 2;
+
+            println(5 + 5.2)
         )";
 
     Lexer newLexer(code);

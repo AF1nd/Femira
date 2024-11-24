@@ -3,6 +3,7 @@
 #include <map>
 #include <vector>
 #include <variant>
+#include <unistd.h>
 
 #include "vm.h"
 
@@ -19,6 +20,12 @@ void FVM::run() {
         if (instruction.code == B_HALT) break;
 
         switch (instruction.code) {
+            case B_DELAY:
+                { 
+                    variant<double, string> val1 = pop();
+
+                    if (const double* pval = get_if<double>(&val1)) usleep(*pval * 1000000);
+                }
             case B_PUSH:
                 {
                     variant<double, string> value = instruction.arg;

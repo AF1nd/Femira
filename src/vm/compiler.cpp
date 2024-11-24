@@ -47,6 +47,18 @@ vector<Instruction> bytecodeFromNode(AstNode* node) {
         if (literal->token.getType() == NUMBER) return { { code: B_PUSH, arg: stod(val) } };
 
         return { { code: B_PUSH, arg: val } };
+    } else if (auto* unary = dynamic_cast<UnaryOperationNode*>(node)) {
+        Token token = unary->operatorToken;
+        if (token.getValue() == "delay") {
+            vector<Instruction> bytecode = {};
+            
+            for (Instruction instr: bytecodeFromNode(unary->operrand)) bytecode.push_back(instr);
+            bytecode.push_back({ code: B_DELAY });
+
+            return bytecode;
+        }
+    } else if (auto* parenthisized = dynamic_cast<ParenthisizedNode*>(node)) {
+        return bytecodeFromNode(parenthisized->wrapped);
     } else if (auto* args = dynamic_cast<ArgsNode*>(node)) {
         vector<Instruction> bytecode = {};
 

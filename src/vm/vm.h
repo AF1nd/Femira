@@ -16,7 +16,8 @@ enum Bytecode {
     B_MUL,
     B_DIV,
     B_PRINT,
-    B_HALT
+    B_HALT,
+    B_DELAY,
 };
 
 struct Instruction {
