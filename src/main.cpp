@@ -4,6 +4,7 @@
 #include "lexer/lexer.h"
 #include "parser/parser.h"
 #include "vm/vm.h"
+#include "vm/compiler.h"
 
 using namespace std;
 
@@ -12,15 +13,7 @@ int main() {
 
     const string code =
         R"(
-            a = 5
-
-            def foo(arg):
-                return arg
-            end
-
-            delay 5;
-
-            (print)(foo(5))
+            println(5 + 5 + 5)
         )";
 
     Lexer newLexer(code);
@@ -37,28 +30,14 @@ int main() {
         cout << v->tostr() << endl;
     }
 
+    Compiler compiler(ast);
+    FVM vm(compiler.generateBytecode());
+
     cout << "<VM STARTED RUNNING:>" << endl;
 
-    FVM newVM({ 
-        {
-            code: B_PUSH,
-            arg: 5,
-        },
-        {
-            code: B_PRINT,
-        },
-        {
-            code: B_PUSH,
-            arg: "Hello",
-        },
-        {
-            code: B_PRINT,
-        },
-    });
+    cout << " > BYTECODE: " << vm.readBytecode() << endl;
 
-    cout << " > BYTECODE: " << newVM.readBytecode() << endl;
-
-    newVM.run();
+    vm.run();
 
     return 0;
 }

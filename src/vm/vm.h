@@ -11,7 +11,6 @@ using namespace std;
 
 enum Bytecode {
     B_PUSH,
-    B_TOSTRING,
     B_ADD,
     B_SUB,
     B_MUL,
@@ -22,19 +21,19 @@ enum Bytecode {
 
 struct Instruction {
     Bytecode code;
-    variant<int, string> arg;
+    variant<double, string> arg;
 };
 
 class FVM {
     private:
         vector<Instruction> bytecode;
     public:
-        stack<variant<int, string>> vmStack;
+        stack<variant<double, string>> vmStack;
 
         FVM(vector<Instruction> bytecode);
         
         void run();
-        variant<int, string> pop();
+        variant<double, string> pop();
         string readBytecode();
 };
 

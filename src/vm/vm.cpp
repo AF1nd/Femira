@@ -8,8 +8,8 @@
 
 using namespace std;
 
-FVM::FVM(vector<Instruction> VM_BYTECODE) {
-    bytecode = VM_BYTECODE;
+FVM::FVM(vector<Instruction> bytecode) {
+    this->bytecode = bytecode;
 }
 
 void FVM::run() {
@@ -21,15 +21,15 @@ void FVM::run() {
         switch (instruction.code) {
             case B_PUSH:
                 {
-                    variant<int, string> value = instruction.arg;
+                    variant<double, string> value = instruction.arg;
 
                     vmStack.push(value);
                 }
                 break;
             case B_PRINT:
                 {
-                    variant<int, string> value = pop();
-                    if (const int* pval = get_if<int>(&value))
+                    variant<double, string> value = pop();
+                    if (const double* pval = get_if<double>(&value))
                         cout << to_string(*pval) << endl;
                     else if (const string* pval = get_if<string>(&value))
                         cout << *pval << endl;
@@ -37,23 +37,23 @@ void FVM::run() {
                 break;
             case B_ADD:
                 {
-                    variant<int, string> val1 = pop();
-                    variant<int, string> val2 = pop();
+                    variant<double, string> val1 = pop();
+                    variant<double, string> val2 = pop();
 
-                    if (const int* pval = get_if<int>(&val1)) {
-                        if (const int* pval2 = get_if<int>(&val2)) {
+                    if (const double* pval = get_if<double>(&val1)) {
+                        if (const double* pval2 = get_if<double>(&val2)) {
                             vmStack.push(*pval + *pval2);
-                        }
-                    }
+                        } else throw runtime_error("Add operation can called only on numbers");
+                    } else throw runtime_error("Add operation can called only on numbers");
                 }
                 break;
             case B_SUB:
                 {
-                    variant<int, string> val1 = pop();
-                    variant<int, string> val2 = pop();
+                    variant<double, string> val1 = pop();
+                    variant<double, string> val2 = pop();
 
-                    if (const int* pval = get_if<int>(&val1)) {
-                        if (const int* pval2 = get_if<int>(&val2)) {
+                    if (const double* pval = get_if<double>(&val1)) {
+                        if (const double* pval2 = get_if<double>(&val2)) {
                             vmStack.push(*pval - *pval2);
                         }
                     }
@@ -61,11 +61,11 @@ void FVM::run() {
                 break;
             case B_MUL:
                 {
-                    variant<int, string> val1 = pop();
-                    variant<int, string> val2 = pop();
+                    variant<double, string> val1 = pop();
+                    variant<double, string> val2 = pop();
 
-                    if (const int* pval = get_if<int>(&val1)) {
-                        if (const int* pval2 = get_if<int>(&val2)) {
+                    if (const double* pval = get_if<double>(&val1)) {
+                        if (const double* pval2 = get_if<double>(&val2)) {
                             vmStack.push(*pval * *pval2);
                         }
                     }
@@ -73,11 +73,11 @@ void FVM::run() {
                 break;
             case B_DIV:
                 {
-                    variant<int, string> val1 = pop();
-                    variant<int, string> val2 = pop();
+                    variant<double, string> val1 = pop();
+                    variant<double, string> val2 = pop();
 
-                    if (const int* pval = get_if<int>(&val1)) {
-                        if (const int* pval2 = get_if<int>(&val2)) {
+                    if (const double* pval = get_if<double>(&val1)) {
+                        if (const double* pval2 = get_if<double>(&val2)) {
                             vmStack.push(*pval / *pval2);
                         }
                     }
@@ -91,8 +91,12 @@ void FVM::run() {
     cout << "<VM ENDED RUNNING>" << endl;
 }
 
-variant<int, string> FVM::pop() {
-    variant<int, string> val = vmStack.top();
+variant<double, string> FVM::pop() {
+    if (vmStack.empty()) {
+        throw runtime_error("Attempted to pop from an empty stack.");
+    }
+    
+    variant<double, string> val = vmStack.top();
     vmStack.pop();
 
     return val;
