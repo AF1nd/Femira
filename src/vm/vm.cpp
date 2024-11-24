@@ -24,11 +24,13 @@ void FVM::run() {
         switch (instruction.code) {
             case B_LOAD:
                 {
-                    variant<double, string> address = instruction.arg;
+                    if (instruction.arg.has_value()) {
+                        variant<double, string> address = instruction.arg.value();
 
-                    if (const string* pval = get_if<string>(&address)) {
-                        vmStack.push(memory.at(*pval));
-                    }
+                        if (const string* pval = get_if<string>(&address)) {
+                            vmStack.push(memory.at(*pval));
+                        }
+                    } else throw runtime_error("FVM ERROR: INSTRUCTION LOAD HAVEN'T ADDRESS");
                 }
                 break;
             case B_ASSIGN:
@@ -38,7 +40,7 @@ void FVM::run() {
 
                     if (const string* pval = get_if<string>(&address)) {
                         memory.insert({ *pval, val });
-                    }
+                    } else throw runtime_error("FVM ERROR: ADDRESS ISN'T STRING");
                 }
                 break;
             case B_DELAY:
@@ -46,13 +48,16 @@ void FVM::run() {
                     variant<double, string> val1 = pop();
 
                     if (const double* pval = get_if<double>(&val1)) usleep(*pval * 1000000);
+                    else throw runtime_error("FVM ERROR: DELAY CAN WORK ONLY WITH NUBMERS");
                 }
                 break;
             case B_PUSH:
                 {
-                    variant<double, string> value = instruction.arg;
+                    if (instruction.arg.has_value()) {
+                        variant<double, string> value = instruction.arg.value();
 
-                    vmStack.push(value);
+                        vmStack.push(value);
+                    }
                 }
                 break;
             case B_PRINT:
@@ -72,8 +77,8 @@ void FVM::run() {
                     if (const double* pval = get_if<double>(&val1)) {
                         if (const double* pval2 = get_if<double>(&val2)) {
                             vmStack.push(*pval + *pval2);
-                        } else throw runtime_error("Add operation can called only on numbers");
-                    } else throw runtime_error("Add operation can called only on numbers");
+                        } else throw runtime_error("FVM ERROR: ADD OPERATION CAN BE EXECUTED ONLY ON TWO NUMBERS");
+                    } else throw runtime_error("FVM ERROR: ADD OPERATION CAN BE EXECUTED ONLY ON TWO NUMBERS");
                 }
                 break;
             case B_SUB:
@@ -84,8 +89,8 @@ void FVM::run() {
                     if (const double* pval = get_if<double>(&val1)) {
                         if (const double* pval2 = get_if<double>(&val2)) {
                             vmStack.push(*pval - *pval2);
-                        }
-                    }
+                        } else throw runtime_error("FVM ERROR: SUB OPERATION CAN BE EXECUTED ONLY ON TWO NUMBERS");
+                    } else throw runtime_error("FVM ERROR: SUB OPERATION CAN BE EXECUTED ONLY ON TWO NUMBERS");
                 }
                 break;
             case B_MUL:
@@ -96,8 +101,8 @@ void FVM::run() {
                     if (const double* pval = get_if<double>(&val1)) {
                         if (const double* pval2 = get_if<double>(&val2)) {
                             vmStack.push(*pval * *pval2);
-                        }
-                    }
+                        } else throw runtime_error("FVM ERROR: MUL OPERATION CAN BE EXECUTED ONLY ON TWO NUMBERS");
+                    } else throw runtime_error("FVM ERROR: MUL OPERATION CAN BE EXECUTED ONLY ON TWO NUMBERS");
                 }
                 break;
             case B_DIV:
@@ -108,8 +113,8 @@ void FVM::run() {
                     if (const double* pval = get_if<double>(&val1)) {
                         if (const double* pval2 = get_if<double>(&val2)) {
                             vmStack.push(*pval / *pval2);
-                        }
-                    }
+                        } else throw runtime_error("FVM ERROR: DIV OPERATION CAN BE EXECUTED ONLY ON TWO NUMBERS");
+                    } else throw runtime_error("FVM ERROR: DIV OPERATION CAN BE EXECUTED ONLY ON TWO NUMBERS");
                 }
                 break;
             default:
@@ -135,13 +140,13 @@ string FVM::readBytecode() {
     string str = "";
 
     for (Instruction code: bytecode) {
-        variant<double, string> value = code.arg;
         string str1 = "";
+        if (code.arg.has_value()) {
+            variant<double, string> value = code.arg.value();
 
-        if (const double* pval = get_if<double>(&value))
-           str1 += to_string(*pval);
-        else if (const string* pval = get_if<string>(&value))
-            str1 += *pval;
+            if (const double* pval = get_if<double>(&value)) str1 += to_string(*pval);
+            else if (const string* pval = get_if<string>(&value)) str1 += *pval;
+        }
             
         str += "\n" + to_string(code.code) + " " + str1;
     }

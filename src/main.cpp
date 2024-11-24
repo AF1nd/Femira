@@ -15,7 +15,10 @@ int main() {
         R"(
             a = 2
 
+            delay a
+
             println(a)
+            println('zадержка')
         )";
 
     Lexer newLexer(code);

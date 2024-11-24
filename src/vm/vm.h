@@ -6,6 +6,7 @@
 #include <map>
 #include <vector>
 #include <variant>
+#include <optional>
 
 using namespace std;
 
@@ -24,7 +25,7 @@ enum Bytecode {
 
 struct Instruction {
     Bytecode code;
-    variant<double, string> arg;
+    optional<variant<double, string>> arg;
 };
 
 class FVM {
