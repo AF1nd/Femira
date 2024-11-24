@@ -8,46 +8,91 @@
 
 using namespace std;
 
-FVM::FVM(vector<int> VM_BYTECODE) {
+FVM::FVM(vector<Instruction> VM_BYTECODE) {
     bytecode = VM_BYTECODE;
 }
 
 void FVM::run() {
     for (int i = 0; i < bytecode.size(); i++) {
-        int instruction = bytecode.at(i);
+        Instruction instruction = bytecode.at(i);
 
-        switch (instruction) {
+        if (instruction.code == B_HALT) break;
+
+        switch (instruction.code) {
             case B_PUSH:
                 {
-                    int value = bytecode.at(i + 1);
-                    i++;
+                    variant<int, string> value = instruction.arg;
 
                     vmStack.push(value);
                 }
                 break;
             case B_PRINT:
-                cout << pop() << endl;
+                {
+                    variant<int, string> value = pop();
+                    if (const int* pval = get_if<int>(&value))
+                        cout << to_string(*pval) << endl;
+                    else if (const string* pval = get_if<string>(&value))
+                        cout << *pval << endl;
+                }
                 break;
             case B_ADD:
-                vmStack.push(pop() + pop());
+                {
+                    variant<int, string> val1 = pop();
+                    variant<int, string> val2 = pop();
+
+                    if (const int* pval = get_if<int>(&val1)) {
+                        if (const int* pval2 = get_if<int>(&val2)) {
+                            vmStack.push(*pval + *pval2);
+                        }
+                    }
+                }
                 break;
             case B_SUB:
-                vmStack.push(pop() - pop());
+                {
+                    variant<int, string> val1 = pop();
+                    variant<int, string> val2 = pop();
+
+                    if (const int* pval = get_if<int>(&val1)) {
+                        if (const int* pval2 = get_if<int>(&val2)) {
+                            vmStack.push(*pval - *pval2);
+                        }
+                    }
+                }
                 break;
             case B_MUL:
-                vmStack.push(pop() * pop());
+                {
+                    variant<int, string> val1 = pop();
+                    variant<int, string> val2 = pop();
+
+                    if (const int* pval = get_if<int>(&val1)) {
+                        if (const int* pval2 = get_if<int>(&val2)) {
+                            vmStack.push(*pval * *pval2);
+                        }
+                    }
+                }
                 break;
             case B_DIV:
-                vmStack.push(pop() / pop());
+                {
+                    variant<int, string> val1 = pop();
+                    variant<int, string> val2 = pop();
+
+                    if (const int* pval = get_if<int>(&val1)) {
+                        if (const int* pval2 = get_if<int>(&val2)) {
+                            vmStack.push(*pval / *pval2);
+                        }
+                    }
+                }
                 break;
             default:
                 break;
         }
     }
+
+    cout << "<VM ENDED RUNNING>" << endl;
 }
 
-int FVM::pop() {
-    int val = vmStack.top();
+variant<int, string> FVM::pop() {
+    variant<int, string> val = vmStack.top();
     vmStack.pop();
 
     return val;
@@ -56,8 +101,8 @@ int FVM::pop() {
 string FVM::readBytecode() {
     string str = "";
 
-    for (int code: bytecode) {
-        str += to_string(code) + " ";
+    for (Instruction code: bytecode) {
+        str += to_string(code.code) + " ";
     }
 
     return str;

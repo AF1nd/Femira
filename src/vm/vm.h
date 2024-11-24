@@ -17,18 +17,24 @@ enum Bytecode {
     B_MUL,
     B_DIV,
     B_PRINT,
+    B_HALT
+};
+
+struct Instruction {
+    Bytecode code;
+    variant<int, string> arg;
 };
 
 class FVM {
     private:
-        vector<int> bytecode;
+        vector<Instruction> bytecode;
     public:
-        stack<int> vmStack;
+        stack<variant<int, string>> vmStack;
 
-        FVM(vector<int> bytecode);
+        FVM(vector<Instruction> bytecode);
         
         void run();
-        int pop();
+        variant<int, string> pop();
         string readBytecode();
 };
 

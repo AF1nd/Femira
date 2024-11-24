@@ -37,11 +37,26 @@ int main() {
         cout << v->tostr() << endl;
     }
 
-    cout << "VM:" << endl;
+    cout << "<VM STARTED RUNNING:>" << endl;
 
-    FVM newVM({ B_PUSH, 5, B_PUSH, 5, B_PRINT });
+    FVM newVM({ 
+        {
+            code: B_PUSH,
+            arg: 5,
+        },
+        {
+            code: B_PRINT,
+        },
+        {
+            code: B_PUSH,
+            arg: "Hello",
+        },
+        {
+            code: B_PRINT,
+        },
+    });
 
-    cout << "BYTECODE: " << newVM.readBytecode() << endl;
+    cout << " > BYTECODE: " << newVM.readBytecode() << endl;
 
     newVM.run();
 
