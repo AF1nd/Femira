@@ -37,13 +37,18 @@ int main() {
     // FVM
 
     FVM vm({
-        {F_PUSH, make_shared<InstructionNumberOperrand>(5.0)},
-        {F_PUSH, make_shared<InstructionNumberOperrand>(2.0)},
+        {F_SETVAR, make_shared<InstructionStringOperrand>("a"), make_shared<InstructionNumberOperrand>(5.0)},
+        {F_SETVAR, make_shared<InstructionStringOperrand>("b"), make_shared<InstructionNumberOperrand>(5.0)},
+
+        {F_GETVAR, make_shared<InstructionStringOperrand>("a")},
+        {F_GETVAR, make_shared<InstructionStringOperrand>("b")},
+
         {F_ADD},
+
         {F_OUTPUT}
     });
 
-    vm.readBytecode();
+    cout << vm.readBytecode() << endl;
     vm.run();
 
     return 0;

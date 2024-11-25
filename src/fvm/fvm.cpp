@@ -21,11 +21,29 @@ void FVM::run() {
                 {
                     push(code.operrand.value());
                 }
-                break;  
+                break;
+            case F_SETVAR:
+                {
+                    auto adr = dynamic_pointer_cast<InstructionStringOperrand>(code.operrand.value());
+                    auto val = code.operrand2.value();
+
+                    if (adr) memory.insert({adr->operrand, val});
+                    else throw runtime_error("FVM: FOR SETVAR EXPECTED ADDERS (OPERRAND 1)");
+                }
+                break;
+            case F_GETVAR:
+                {
+                    auto adr = dynamic_pointer_cast<InstructionStringOperrand>(code.operrand.value());
+                    if (adr) {
+                        auto val = memory.at(adr->operrand);
+                        if (val) push(val);
+                    } else throw runtime_error("FVM: FOR GETVAR EXPECTED ADDERS (OPERRAND)");
+                }
+                break;
             case F_OUTPUT:
                 {
                     shared_ptr<InstructionOperrand> val = pop();
-                    val->print();
+                    val->output();
                     cout << endl;
                 }
                 break;
@@ -83,8 +101,8 @@ string FVM::readBytecode() {
     string str = "";
 
     for (Instruction code: bytecode) {
-        str += "\n" + to_string(code.code);
+        str += "\n 0000" + to_string(code.code);
     }
 
-    return " > BYTECODE: 00000" + str;
+    return " > BYTECODE: " + str;
 }
