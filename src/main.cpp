@@ -3,8 +3,7 @@
 
 #include "lexer/lexer.h"
 #include "parser/parser.h"
-#include "vm/vm.h"
-#include "vm/compiler.h"
+#include "fvm/fvm.h"
 
 using namespace std;
 
@@ -35,10 +34,16 @@ int main() {
         cout << v->tostr() << endl;
     }
 
-    Compiler compiler(ast);
-    FVM vm(compiler.generateBytecode());
+    // FVM
 
-    cout << vm.readBytecode() << endl;
+    FVM vm({
+        {F_PUSH, make_shared<InstructionNumberOperrand>(5.0)},
+        {F_PUSH, make_shared<InstructionNumberOperrand>(2.0)},
+        {F_ADD},
+        {F_OUTPUT}
+    });
+
+    vm.readBytecode();
     vm.run();
 
     return 0;
