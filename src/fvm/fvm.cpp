@@ -3,6 +3,7 @@
 #include <vector>
 #include <variant>
 #include <any>
+#include <unistd.h>
 
 #include "fvm.h"
 
@@ -12,14 +13,49 @@ FVM::FVM(vector<Instruction> bytecode) {
     this->bytecode = bytecode;
 }
 
-void FVM::run() {
-    cout << "<VM STARTED RUNNING>" << endl;
-
+shared_ptr<InstructionOperrand> FVM::run() {
     for (Instruction code: bytecode) {
         switch (code.code) {
             case F_PUSH:
                 {
                     push(code.operrand.value());
+                }
+                break;
+            case F_DELAY:
+                {
+                    auto val = dynamic_pointer_cast<InstructionNumberOperrand>(pop());
+                    usleep(val->operrand * 1000000);
+                }
+                break;
+            case F_RETURN:
+                {
+                    shared_ptr<InstructionOperrand> val = pop();
+                    return val;
+                }
+                break;
+            case F_CALL:
+                {
+                    auto funcId = dynamic_pointer_cast<InstructionStringOperrand>(pop());
+
+                    vector<shared_ptr<InstructionOperrand>> args;
+
+                    FuncDeclaration funcDeclar = functions.at(funcId->operrand);
+                    
+                    for (size_t i = 0; i < funcDeclar.argsNum; ++i) {
+                        shared_ptr<InstructionOperrand> arg = pop();
+                        args.push_back(arg);
+                    }
+
+                    FVM funcVM(funcDeclar.bytecode);
+
+                    for (size_t i = 0; i < funcDeclar.argsNum; i++) {
+                        shared_ptr<InstructionOperrand> arg = args.at(i);
+                        string id = funcDeclar.argsIds.at(i);
+                        
+                        funcVM.memory.insert({ id, arg });
+                    }
+
+                    push(funcVM.run());
                 }
                 break;
             case F_SETVAR:
@@ -51,7 +87,7 @@ void FVM::run() {
                 {
                     auto val1 = dynamic_pointer_cast<InstructionNumberOperrand>(pop());
                     auto val2 = dynamic_pointer_cast<InstructionNumberOperrand>(pop());
-                    push(make_shared<InstructionNumberOperrand>(val2->operrand + val1->operrand));
+                    push(make_shared<InstructionNumberOperrand>(val1->operrand + val2->operrand));
                 }
                 break;
             case F_SUB:
@@ -59,7 +95,7 @@ void FVM::run() {
                     auto val1 = dynamic_pointer_cast<InstructionNumberOperrand>(pop());
                     auto val2 = dynamic_pointer_cast<InstructionNumberOperrand>(pop());
 
-                    push(make_shared<InstructionNumberOperrand>(val2->operrand - val1->operrand));
+                    push(make_shared<InstructionNumberOperrand>(val1->operrand - val2->operrand));
                 }
                 break;
             case F_MUL:
@@ -67,14 +103,14 @@ void FVM::run() {
                     auto val1 = dynamic_pointer_cast<InstructionNumberOperrand>(pop());
                     auto val2 = dynamic_pointer_cast<InstructionNumberOperrand>(pop());
 
-                    push(make_shared<InstructionNumberOperrand>(val2->operrand * val1->operrand));
+                    push(make_shared<InstructionNumberOperrand>(val1->operrand * val2->operrand));
                 }
                 break;
             case F_DIV:
                 {
                     auto val1 = dynamic_pointer_cast<InstructionNumberOperrand>(pop());
                     auto val2 = dynamic_pointer_cast<InstructionNumberOperrand>(pop());
-                    push(make_shared<InstructionNumberOperrand>(val2->operrand / val1->operrand));
+                    push(make_shared<InstructionNumberOperrand>(val1->operrand / val2->operrand));
                 }
                 break;
             default:
@@ -82,7 +118,7 @@ void FVM::run() {
         }
     }
 
-    cout << "<VM ENDED RUNNING>" << endl;
+    return 0;
 }
 
 void FVM::push(shared_ptr<InstructionOperrand> operrand) {

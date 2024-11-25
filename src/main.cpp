@@ -32,21 +32,53 @@ int main() {
 
     for (AstNode* v: ast->nodes) {
         cout << v->tostr() << endl;
-    }
+    };
 
     // FVM
 
     FVM vm({
-        {F_SETVAR, make_shared<InstructionStringOperrand>("a"), make_shared<InstructionNumberOperrand>(5.0)},
-        {F_SETVAR, make_shared<InstructionStringOperrand>("b"), make_shared<InstructionNumberOperrand>(5.0)},
+        {F_SETVAR, make_shared<InstructionStringOperrand>("a"), make_shared<InstructionNumberOperrand>(5.0)}, // var a
+        {F_SETVAR, make_shared<InstructionStringOperrand>("b"), make_shared<InstructionNumberOperrand>(5.0)}, // var b
 
-        {F_GETVAR, make_shared<InstructionStringOperrand>("a")},
-        {F_GETVAR, make_shared<InstructionStringOperrand>("b")},
+        {F_GETVAR, make_shared<InstructionStringOperrand>("a")}, // arg1 from var
+        {F_GETVAR, make_shared<InstructionStringOperrand>("b")}, // arg2 from var
 
-        {F_ADD},
+        {F_PUSH, make_shared<InstructionStringOperrand>("add")}, // func id
+        {F_CALL}, // call
 
-        {F_OUTPUT}
+        {F_PUSH, make_shared<InstructionNumberOperrand>(3.0)},
+        {F_PUSH, make_shared<InstructionStringOperrand>("sub")}, // func id
+        
+        {F_CALL}, // call
+
+        {F_OUTPUT} // print
     });
+
+    vm.functions["add"] = {
+        bytecode: {
+            {F_GETVAR, make_shared<InstructionStringOperrand>("a")},
+            {F_GETVAR, make_shared<InstructionStringOperrand>("b")},
+
+            {F_ADD},
+            
+            {F_RETURN},
+        },
+        argsNum: 2,
+        argsIds: { "a", "b" }
+    };
+
+    vm.functions["sub"] = {
+        bytecode: {
+            {F_GETVAR, make_shared<InstructionStringOperrand>("a")},
+            {F_GETVAR, make_shared<InstructionStringOperrand>("b")},
+
+            {F_SUB},
+            
+            {F_RETURN},
+        },
+        argsNum: 2,
+        argsIds: { "a", "b" }
+    };
 
     cout << vm.readBytecode() << endl;
     vm.run();

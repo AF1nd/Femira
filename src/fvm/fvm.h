@@ -14,6 +14,10 @@ enum Bytecode {
     F_SETVAR,
     F_GETVAR,
 
+    F_CALL,
+    F_RETURN,
+    F_DELAY,
+
     F_OUTPUT,
 
     F_ADD,
@@ -47,17 +51,16 @@ struct InstructionStringOperrand : InstructionOperrand {
     }
 };
 
-
 struct InstructionBoolOperrand : InstructionOperrand {
     bool operrand;
 
     InstructionBoolOperrand(bool operrand) { this->operrand = operrand; };
 
     void output() const override  {
-        cout << operrand ? "true" : "false";
+        string str = operrand == true ? "true" : "false";
+        cout << str;
     }
 };
-
 
 struct Instruction {
     optional<shared_ptr<InstructionOperrand>> operrand;
@@ -73,13 +76,21 @@ struct Instruction {
     Instruction() = default;
 };
 
+struct FuncDeclaration {
+    vector<Instruction> bytecode;
+    int argsNum;
+    vector<string> argsIds;
+};
+
 class FVM {
     public:
         vector<Instruction> bytecode;
         stack<shared_ptr<InstructionOperrand>> vmStack;
         map<string, shared_ptr<InstructionOperrand>> memory;
+
+        map<string, FuncDeclaration> functions;
         
-        void run();
+        shared_ptr<InstructionOperrand> run();
         FVM(vector<Instruction> bytecode);
 
         void push(shared_ptr<InstructionOperrand> operrand);
