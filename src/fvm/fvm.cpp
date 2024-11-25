@@ -33,6 +33,15 @@ shared_ptr<InstructionOperrand> FVM::run() {
                     return val;
                 }
                 break;
+            case F_LOADFUNC:
+                {
+                    auto declr = dynamic_pointer_cast<InstructionFunctionLoadOperrand>(code.operrand.value());
+                    FuncDeclaration fnDeclr = declr->operrand;
+                    string id = fnDeclr.id;
+
+                    functions.insert({id, fnDeclr});
+                }
+                break;
             case F_CALL:
                 {
                     auto funcId = dynamic_pointer_cast<InstructionStringOperrand>(pop());
@@ -95,7 +104,7 @@ shared_ptr<InstructionOperrand> FVM::run() {
                     auto val1 = dynamic_pointer_cast<InstructionNumberOperrand>(pop());
                     auto val2 = dynamic_pointer_cast<InstructionNumberOperrand>(pop());
 
-                    push(make_shared<InstructionNumberOperrand>(val1->operrand - val2->operrand));
+                    push(make_shared<InstructionNumberOperrand>(val2->operrand - val1->operrand));
                 }
                 break;
             case F_MUL:
@@ -110,7 +119,7 @@ shared_ptr<InstructionOperrand> FVM::run() {
                 {
                     auto val1 = dynamic_pointer_cast<InstructionNumberOperrand>(pop());
                     auto val2 = dynamic_pointer_cast<InstructionNumberOperrand>(pop());
-                    push(make_shared<InstructionNumberOperrand>(val1->operrand / val2->operrand));
+                    push(make_shared<InstructionNumberOperrand>(val2->operrand / val1->operrand));
                 }
                 break;
             default:
@@ -137,7 +146,7 @@ string FVM::readBytecode() {
     string str = "";
 
     for (Instruction code: bytecode) {
-        str += "\n 0000" + to_string(code.code);
+        str += "\n   > " + to_string(code.code);
     }
 
     return " > BYTECODE: " + str;

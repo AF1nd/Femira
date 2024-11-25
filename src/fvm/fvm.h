@@ -14,6 +14,7 @@ enum Bytecode {
     F_SETVAR,
     F_GETVAR,
 
+    F_LOADFUNC,
     F_CALL,
     F_RETURN,
     F_DELAY,
@@ -80,6 +81,17 @@ struct FuncDeclaration {
     vector<Instruction> bytecode;
     int argsNum;
     vector<string> argsIds;
+    string id;
+};
+
+struct InstructionFunctionLoadOperrand : InstructionOperrand {
+    FuncDeclaration operrand;
+
+    InstructionFunctionLoadOperrand(FuncDeclaration operrand) { this->operrand = operrand; };
+
+    void output() const override {
+        cout << "Function";
+    }
 };
 
 class FVM {
