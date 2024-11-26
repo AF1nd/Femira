@@ -32,7 +32,7 @@ enum Bytecode {
 
 struct InstructionOperrand {
     any operrand;
-    virtual string tostring() const = 0; // Виртуальная функция для печати
+    virtual string tostring() const = 0; 
 };
 
 struct InstructionNullOperrand : InstructionOperrand {

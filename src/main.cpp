@@ -14,7 +14,10 @@ int main() {
     const string code =
         R"(
             def foo(a, b):
-                return a + b
+                def helper(a, b):
+                    return a + b
+                end
+                return helper(a, b)
             end
 
             output foo(1, 2)
@@ -41,6 +44,9 @@ int main() {
     FVM vm(bytecode);
 
     cout << vm.readBytecode() << endl;
+
+    cout << "<RESULT>" << endl;
+    
     vm.run();
 
     return 0;
