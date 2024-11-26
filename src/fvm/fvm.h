@@ -95,7 +95,7 @@ struct InstructionFunctionLoadOperrand : InstructionOperrand {
     InstructionFunctionLoadOperrand(FuncDeclaration operrand) { this->operrand = operrand; };
 
     string tostring() const override {
-        return "Function";
+        return operrand.id;
     }
 };
 

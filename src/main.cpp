@@ -64,8 +64,7 @@ int main() {
         {F_GETVAR, make_shared<InstructionStringOperrand>("a")}, // arg1 from var
         {F_GETVAR, make_shared<InstructionStringOperrand>("b")}, // arg2 from var
 
-        {F_PUSH, make_shared<InstructionStringOperrand>("add")}, // func id
-        {F_CALL}, // call
+        {F_CALL, make_shared<InstructionStringOperrand>("add")}, // call
 
         {F_OUTPUT} // print
     });

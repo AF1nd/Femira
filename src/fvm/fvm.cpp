@@ -4,10 +4,58 @@
 #include <variant>
 #include <any>
 #include <unistd.h>
+#include <algorithm>
+#include <string>
 
 #include "fvm.h"
 
 using namespace std;
+
+string opcodeToString(Bytecode opcode) {
+    switch (opcode) {
+        case F_PUSH:
+            return "PUSH";
+            break;
+        case F_SETVAR:
+            return "SETVAR";
+            break;
+        case F_GETVAR:
+            return "GETVAR";
+            break;
+        case F_LOADFUNC:
+            return "LOADFUNC";
+            break;
+        case F_CALL:
+            return "CALL";
+            break;
+        case F_RETURN:
+            return "RETURN";
+            break;
+        case F_DELAY:
+            return "DELAY";
+            break;
+        case F_OUTPUT:
+            return "OUTPUT";
+            break;
+         case F_ADD:
+            return "ADD";
+            break;
+        case F_SUB:
+            return "SUB";
+            break;
+        case F_MUL:
+            return "MUL";
+            break;
+        case F_DIV:
+            return "DIV";
+            break;
+        default:
+            break;
+    }
+
+    return "unknown";
+};
+
 
 FVM::FVM(vector<Instruction> bytecode) {
     this->bytecode = bytecode;
@@ -50,7 +98,7 @@ shared_ptr<InstructionOperrand> FVM::run() {
                 break;
             case F_CALL:
                 {
-                    auto funcId = dynamic_pointer_cast<InstructionStringOperrand>(pop());
+                    auto funcId = dynamic_pointer_cast<InstructionStringOperrand>(code.operrand.value());
 
                     vector<shared_ptr<InstructionOperrand>> args;
 
@@ -79,7 +127,7 @@ shared_ptr<InstructionOperrand> FVM::run() {
                     auto val = code.operrand2.value();
 
                     if (adr) memory.insert({adr->operrand, val});
-                    else throw runtime_error("FVM: FOR SETVAR EXPECTED ADDERS (OPERRAND 1)");
+                    else throw runtime_error("FVM: FOR SETVAR EXPECTED ADDRESS (OPERRAND 1)");
                 }
                 break;
             case F_GETVAR:
@@ -158,12 +206,14 @@ string FVM::readBytecode() {
             opStr = code.operrand.value()->tostring();
         }
 
-          if (code.operrand2.has_value()) {
+        if (code.operrand2.has_value()) {
             opStr2 = code.operrand2.value()->tostring();
         }
 
-        str += "\n   > " + to_string(code.code) + " " + opStr + " " + opStr2;
+        string opcodeName = opcodeToString(code.code);
+
+        str += "\n  > " + (opcodeName != "unknown" ? opcodeName : to_string(code.code)) + " " + opStr + " " + opStr2;
     }
 
-    return " > BYTECODE: " + str;
+    return "[ BYTECODE ]" + str;
 }
