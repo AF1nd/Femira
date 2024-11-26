@@ -18,12 +18,18 @@ shared_ptr<InstructionOperrand> FVM::run() {
         switch (code.code) {
             case F_PUSH:
                 {
+                    bool hasVal = code.operrand.has_value();
+                    shared_ptr<InstructionOperrand> val = code.operrand.value();
+                    if (!hasVal) throw runtime_error("FVM: NO OPERRAND FOR PUSH");
+
                     push(code.operrand.value());
                 }
                 break;
             case F_DELAY:
                 {
                     auto val = dynamic_pointer_cast<InstructionNumberOperrand>(pop());
+                    if (!val) throw runtime_error("FVM: DELAY ERROR, NO NUMBER IN STACK");
+
                     usleep(val->operrand * 1000000);
                 }
                 break;
@@ -88,8 +94,7 @@ shared_ptr<InstructionOperrand> FVM::run() {
             case F_OUTPUT:
                 {
                     shared_ptr<InstructionOperrand> val = pop();
-                    val->output();
-                    cout << endl;
+                    cout << val->tostring() << endl;
                 }
                 break;
             case F_ADD:
@@ -146,7 +151,18 @@ string FVM::readBytecode() {
     string str = "";
 
     for (Instruction code: bytecode) {
-        str += "\n   > " + to_string(code.code);
+        string opStr;
+        string opStr2;
+
+        if (code.operrand.has_value()) {
+            opStr = code.operrand.value()->tostring();
+        }
+
+          if (code.operrand2.has_value()) {
+            opStr2 = code.operrand2.value()->tostring();
+        }
+
+        str += "\n   > " + to_string(code.code) + " " + opStr + " " + opStr2;
     }
 
     return " > BYTECODE: " + str;

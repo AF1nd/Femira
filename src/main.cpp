@@ -1,8 +1,8 @@
 #include <iostream>
 #include <vector>
 
-#include "lexer/lexer.h"
-#include "parser/parser.h"
+#include "compiler/lexer/lexer.h"
+#include "compiler/parser/parser.h"
 #include "fvm/fvm.h"
 
 using namespace std;

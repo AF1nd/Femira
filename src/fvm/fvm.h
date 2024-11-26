@@ -29,7 +29,7 @@ enum Bytecode {
 
 struct InstructionOperrand {
     any operrand;
-    virtual void output() const = 0; // Виртуальная функция для печати
+    virtual string tostring() const = 0; // Виртуальная функция для печати
 };
 
 struct InstructionNumberOperrand : InstructionOperrand {
@@ -37,8 +37,8 @@ struct InstructionNumberOperrand : InstructionOperrand {
 
     InstructionNumberOperrand(double operrand) { this->operrand = operrand; };
 
-    void output() const override {
-        cout << operrand;
+    string tostring() const override {
+        return to_string(operrand);
     }
 };
 
@@ -47,8 +47,8 @@ struct InstructionStringOperrand : InstructionOperrand {
 
     InstructionStringOperrand(string operrand) { this->operrand = operrand; };
 
-    void output() const override  {
-        cout << operrand;
+    string tostring() const override  {
+        return operrand;
     }
 };
 
@@ -57,9 +57,9 @@ struct InstructionBoolOperrand : InstructionOperrand {
 
     InstructionBoolOperrand(bool operrand) { this->operrand = operrand; };
 
-    void output() const override  {
+    string tostring() const override  {
         string str = operrand == true ? "true" : "false";
-        cout << str;
+        return str;
     }
 };
 
@@ -69,10 +69,15 @@ struct Instruction {
     Bytecode code;
 
     Instruction(Bytecode code, 
-        optional<shared_ptr<InstructionOperrand>> operrand = make_shared<InstructionNumberOperrand>(0), 
-        optional<shared_ptr<InstructionOperrand>> operrand2 = make_shared<InstructionNumberOperrand>(0)
-    )
-    { this->code = code; this->operrand = operrand; this->operrand2 = operrand2; };
+        optional<shared_ptr<InstructionOperrand>> operrand, 
+        optional<shared_ptr<InstructionOperrand>> operrand2
+    ) { this->code = code; this->operrand = operrand; this->operrand2 = operrand2; };
+
+    Instruction(Bytecode code, 
+        optional<shared_ptr<InstructionOperrand>> operrand
+    ) { this->code = code; this->operrand = operrand; };
+
+    Instruction(Bytecode code) { this->code = code; };
 
     Instruction() = default;
 };
@@ -89,8 +94,8 @@ struct InstructionFunctionLoadOperrand : InstructionOperrand {
 
     InstructionFunctionLoadOperrand(FuncDeclaration operrand) { this->operrand = operrand; };
 
-    void output() const override {
-        cout << "Function";
+    string tostring() const override {
+        return "Function";
     }
 };
 
