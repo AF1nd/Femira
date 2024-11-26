@@ -83,12 +83,16 @@ shared_ptr<InstructionOperrand> FVM::run() {
                 break;
             case F_RETURN:
                 {
-                    shared_ptr<InstructionOperrand> val = pop();
-                    return val;
+                    shared_ptr<InstructionNullOperrand> val = make_shared<InstructionNullOperrand>();
+                    if (vmStack.empty()) return val;
+                    
+                    return pop();
                 }
                 break;
             case F_LOADFUNC:
                 {
+                    if (!code.operrand.has_value()) throw runtime_error("FVM: CANNOT LOAD FUNC! NO OPERRAND");
+
                     auto declr = dynamic_pointer_cast<InstructionFunctionLoadOperrand>(code.operrand.value());
                     FuncDeclaration fnDeclr = declr->operrand;
                     string id = fnDeclr.id;
@@ -98,6 +102,7 @@ shared_ptr<InstructionOperrand> FVM::run() {
                 break;
             case F_CALL:
                 {
+                    if (!code.operrand.has_value()) throw runtime_error("FVM: CANNOT CALL FUNC! NO OPERRAND");
                     auto funcId = dynamic_pointer_cast<InstructionStringOperrand>(code.operrand.value());
 
                     vector<shared_ptr<InstructionOperrand>> args;

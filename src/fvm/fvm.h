@@ -32,6 +32,16 @@ struct InstructionOperrand {
     virtual string tostring() const = 0; // Виртуальная функция для печати
 };
 
+struct InstructionNullOperrand : InstructionOperrand {
+    bool operrand = true;
+
+    InstructionNullOperrand() = default;
+
+    string tostring() const override {
+        return "NULL";
+    }
+};
+
 struct InstructionNumberOperrand : InstructionOperrand {
     double operrand;
 
