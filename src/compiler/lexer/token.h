@@ -8,7 +8,10 @@ using namespace std;
 enum TokenType { 
     ID, 
     NUMBER, 
-    STRING, 
+    STRING,
+    TRUE,
+    FALSE,
+    NULLT,
 
     SEMICOLON, 
     WHITESPACE, 
@@ -22,6 +25,7 @@ enum TokenType {
 
     RETURN,
     DELAY,
+    OUTPUT,
 
     ASSIGN, 
     PLUS,

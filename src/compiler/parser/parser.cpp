@@ -14,6 +14,7 @@ Parser::Parser(vector<Token> tokens) {
     unaryOperationsTokens = {
         RETURN,
         DELAY,
+        OUTPUT,
     };
 
     binaryOperationsTokens = {
@@ -27,12 +28,15 @@ Parser::Parser(vector<Token> tokens) {
         SMALLER, 
         BIGGER_OR_EQ, 
         SMALLER_OR_EQ,
-        ASSIGN,
+        ASSIGN
     };
 
     literalTokens = {
         STRING,
         NUMBER,
+        NULLT,
+        TRUE,
+        FALSE
     };
 }
 

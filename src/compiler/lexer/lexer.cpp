@@ -61,6 +61,8 @@ string getTokenTypeString(int type) {
             return "RETURN";
         case DELAY:
             return "DELAY";
+        case OUTPUT:
+            return "OUTPUT";
         default:
             return "";
     }
@@ -76,6 +78,10 @@ Lexer::Lexer(string code) {
     _tokenTypesPatterns = {
         { "[+-]?([0-9]*[.])?[0-9]+", NUMBER },
         {"'[^']*'", STRING },
+        {"true", TRUE },
+        {"false", FALSE },
+        {"null", NULLT },
+
         {";", SEMICOLON },
         { "\\s+", WHITESPACE },
 
@@ -106,6 +112,7 @@ Lexer::Lexer(string code) {
 
         { "return", RETURN },
         { "delay", DELAY },
+        { "output", OUTPUT },
 
         { "[a-zA-Z_][a-zA-Z0-9_]*", ID },
     };

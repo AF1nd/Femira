@@ -1,3 +1,6 @@
+#ifndef FVM_H
+#define FVM_H
+
 #include <iostream>
 #include <stack>
 #include <vector>
@@ -94,9 +97,11 @@ struct Instruction {
 
 struct FuncDeclaration {
     vector<Instruction> bytecode;
-    int argsNum;
     vector<string> argsIds;
     string id;
+
+    FuncDeclaration(vector<Instruction> bytecode, vector<string> argsIds, string id) { this->bytecode = bytecode; this->argsIds = argsIds, this->id = id; };
+    FuncDeclaration() = default;
 };
 
 struct InstructionFunctionLoadOperrand : InstructionOperrand {
@@ -126,3 +131,5 @@ class FVM {
 
         string readBytecode();
 };
+
+#endif

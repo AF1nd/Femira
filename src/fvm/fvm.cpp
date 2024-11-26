@@ -108,28 +108,34 @@ shared_ptr<InstructionOperrand> FVM::run() {
                     vector<shared_ptr<InstructionOperrand>> args;
 
                     FuncDeclaration funcDeclar = functions.at(funcId->operrand);
-                    
-                    for (size_t i = 0; i < funcDeclar.argsNum; ++i) {
+
+                    int argsNum = funcDeclar.argsIds.size();
+
+                    for (size_t i = 0; i < argsNum; ++i) {
                         shared_ptr<InstructionOperrand> arg = pop();
                         args.push_back(arg);
                     }
 
                     FVM funcVM(funcDeclar.bytecode);
 
-                    for (size_t i = 0; i < funcDeclar.argsNum; i++) {
+                    for (size_t i = 0; i < argsNum; ++i) {
                         shared_ptr<InstructionOperrand> arg = args.at(i);
                         string id = funcDeclar.argsIds.at(i);
                         
                         funcVM.memory.insert({ id, arg });
                     }
 
-                    push(funcVM.run());
+                    cout << funcVM.readBytecode() << endl;
+
+                    shared_ptr<InstructionOperrand> result = funcVM.run();
+
+                    push(result != nullptr ? result : make_shared<InstructionNullOperrand>());
                 }
                 break;
             case F_SETVAR:
                 {
                     auto adr = dynamic_pointer_cast<InstructionStringOperrand>(code.operrand.value());
-                    auto val = code.operrand2.value();
+                    auto val = pop();
 
                     if (adr) memory.insert({adr->operrand, val});
                     else throw runtime_error("FVM: FOR SETVAR EXPECTED ADDRESS (OPERRAND 1)");
