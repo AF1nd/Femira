@@ -118,7 +118,7 @@ class FVM {
     public:
         vector<Instruction> bytecode;
         stack<shared_ptr<InstructionOperrand>> vmStack;
-        map<string, shared_ptr<InstructionOperrand>> memory;
+        map<string, shared_ptr<InstructionOperrand>> scope;
 
         map<string, FuncDeclaration> functions;
         

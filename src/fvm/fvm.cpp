@@ -118,11 +118,19 @@ shared_ptr<InstructionOperrand> FVM::run() {
 
                     FVM funcVM(funcDeclar.bytecode);
 
+                    for (pair<string, shared_ptr<InstructionOperrand>> scopeMember: scope)  {
+                        funcVM.scope.insert(scopeMember);
+                    }
+
+                    for (pair<string, FuncDeclaration> funcDeclar: functions)  {
+                        funcVM.functions.insert(funcDeclar);
+                    }
+
                     for (size_t i = 0; i < argsNum; ++i) {
                         shared_ptr<InstructionOperrand> arg = args.at(i);
                         string id = funcDeclar.argsIds.at(i);
                         
-                        funcVM.memory.insert({ id, arg });
+                        funcVM.scope.insert({ id, arg });
                     }
 
                     cout << funcVM.readBytecode() << endl;
@@ -137,7 +145,7 @@ shared_ptr<InstructionOperrand> FVM::run() {
                     auto adr = dynamic_pointer_cast<InstructionStringOperrand>(code.operrand.value());
                     auto val = pop();
 
-                    if (adr) memory.insert({adr->operrand, val});
+                    if (adr) scope.insert({adr->operrand, val});
                     else throw runtime_error("FVM: FOR SETVAR EXPECTED ADDRESS (OPERRAND 1)");
                 }
                 break;
@@ -145,7 +153,7 @@ shared_ptr<InstructionOperrand> FVM::run() {
                 {
                     auto adr = dynamic_pointer_cast<InstructionStringOperrand>(code.operrand.value());
                     if (adr) {
-                        auto val = memory.at(adr->operrand);
+                        auto val = scope.at(adr->operrand);
                         if (val) push(val);
                     } else throw runtime_error("FVM: FOR GETVAR EXPECTED ADDERS (OPERRAND)");
                 }

@@ -1,6 +1,7 @@
 
 #include <iostream>
 #include <vector>
+#include <algorithm>
 
 #include "./lexer/lexer.h"
 #include "./parser/parser.h"
@@ -89,7 +90,11 @@ void BytecodeGenerator::visitNode(AstNode* node) {
                 FuncDeclaration(bgen.generate(), argsIds, fnDefine->id->token.getValue())
             )));
         } else if (CallNode* call = dynamic_cast<CallNode*>(node)) {
-            for (AstNode* arg: call->args->nodes) visitNode(arg);
+            reverse(call->args->nodes.begin(), call->args->nodes.end());
+            
+            for (AstNode* arg: call->args->nodes) {
+                visitNode(arg);
+            }
 
             string fnId;
 
