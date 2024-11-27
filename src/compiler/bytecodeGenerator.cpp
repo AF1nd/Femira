@@ -72,6 +72,23 @@ void BytecodeGenerator::visitNode(AstNode* node) {
             } else if (literalType == NULLT) {
                 bytecode.push_back(Instruction(Bytecode(F_PUSH), make_shared<InstructionNullOperrand>()));
             }
+        } else if (IfStatementNode* ifStatement = dynamic_cast<IfStatementNode*>(node)) {
+            BytecodeGenerator bgen(ifStatement->block);
+
+            visitNode(ifStatement->condition);
+
+            if (ifStatement->elseBlock) {
+                BytecodeGenerator bgenElse(ifStatement->elseBlock);
+                
+                bytecode.push_back(Instruction(Bytecode(F_IF), make_shared<InstructionIfStatementLoadOperrand>(
+                    IfStatement(bgen.generate(), bgenElse.generate())
+                )));
+                return;
+            };
+
+            bytecode.push_back(Instruction(Bytecode(F_IF), make_shared<InstructionIfStatementLoadOperrand>(
+                IfStatement(bgen.generate())
+            )));
         } else if (UnaryOperationNode* unary = dynamic_cast<UnaryOperationNode*>(node)) {
             Token token = unary->operatorToken;
             TokenType unaryType = token.getType();

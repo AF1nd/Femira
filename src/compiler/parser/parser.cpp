@@ -119,6 +119,7 @@ AstNode* Parser::parseExpression() {
     if (match(unaryOperationsTokens) && !node) {
         node = parseUnaryOperation();
     };
+    if (match({ IF })) node = parseIfStatement();
     if (match({ LBRACKET }) && !node) node = parseParenthisized();
 
     if (node) {
@@ -129,6 +130,30 @@ AstNode* Parser::parseExpression() {
     }
 
     return node;
+}
+
+IfStatementNode* Parser::parseIfStatement() {
+    consume({ IF });
+
+    AstNode* condition = parseExpression();
+
+    if (!condition) throw runtime_error("Syntax error, after if needs condition");
+
+    BlockNode* block = parseBlock();
+    BlockNode* elseBlock = nullptr;
+
+    if (match({ ELSE })) {
+        consume({ ELSE });
+
+        elseBlock = parseBlock();
+    }
+
+    IfStatementNode* statement = new IfStatementNode();
+    statement->block = block;
+    statement->elseBlock = elseBlock;
+    statement->condition = condition;
+
+    return statement;
 }
 
 ParenthisizedNode* Parser::parseParenthisized() {

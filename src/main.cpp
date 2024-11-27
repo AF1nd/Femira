@@ -13,15 +13,17 @@ int main() {
 
     const string code =
         R"(
-            def getOne():
-                return 5
+            def check(a):
+                if a == 5:
+                    return 'правда'
+                end
+                else:
+                    return 'фейк'
+                end
             end
 
-            def getTwo():
-                return 6
-            end
-
-            output getTwo() > getOne()
+            output check(5)
+            output check(6)
         )";
 
     Lexer newLexer(code);

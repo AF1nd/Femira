@@ -59,6 +59,16 @@ string getTokenTypeString(int type) {
             return "SMALLER_OR_EQ";
         case BEGIN:
             return "BEGIN";
+        case TRUE:
+            return "TRUE";
+        case FALSE:
+            return "FALSE";
+        case NULLT:
+            return "NULL";
+        case IF:
+            return "IF";
+        case ELSE:
+            return "ELSE";
         case END:
             return "END";
         case RETURN:
@@ -115,6 +125,9 @@ Lexer::Lexer(string code) {
         make_pair(":", BEGIN ),
         make_pair("end", END ),
         make_pair("def", DEF ),
+        
+        make_pair("if", IF ),
+        make_pair("else", ELSE ),
 
         make_pair("return", RETURN ),
         make_pair("delay", DELAY ),

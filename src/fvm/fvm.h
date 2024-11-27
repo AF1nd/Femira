@@ -18,6 +18,7 @@ enum Bytecode {
     F_GETVAR,
 
     F_LOADFUNC,
+    F_LOADIFST,
     F_CALL,
     F_RETURN,
     F_DELAY,
@@ -36,6 +37,9 @@ enum Bytecode {
 
     F_BIGGER_OR_EQ,
     F_SMALLER_OR_EQ,
+
+    F_IF,
+    F_ELSE,
 
     F_AND,
 };
@@ -137,6 +141,15 @@ struct FuncDeclaration {
     FuncDeclaration() = default;
 };
 
+struct IfStatement {
+    vector<Instruction> bytecode;
+    vector<Instruction> elseBytecode;
+
+    IfStatement(vector<Instruction> bytecode) { this->bytecode = bytecode; };
+    IfStatement(vector<Instruction> bytecode, vector<Instruction> elseBytecode)  { this->bytecode = bytecode; this->elseBytecode = elseBytecode; };
+    IfStatement() = default;
+};
+
 struct InstructionFunctionLoadOperrand : InstructionOperrand {
     FuncDeclaration operrand;
 
@@ -147,6 +160,16 @@ struct InstructionFunctionLoadOperrand : InstructionOperrand {
     }
 };
 
+struct InstructionIfStatementLoadOperrand : InstructionOperrand {
+    IfStatement operrand;
+
+    InstructionIfStatementLoadOperrand(IfStatement operrand) { this->operrand = operrand; };
+
+    string tostring() const override {
+        return "IF_STMNT";
+    }
+};
+
 class FVM {
     public:
         vector<Instruction> bytecode;
@@ -154,7 +177,7 @@ class FVM {
         map<string, shared_ptr<InstructionOperrand>> scope;
 
         map<string, FuncDeclaration> functions;
-        
+  
         shared_ptr<InstructionOperrand> run();
         FVM(vector<Instruction> bytecode);
 

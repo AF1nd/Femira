@@ -104,6 +104,39 @@ shared_ptr<InstructionOperrand> FVM::run() {
                     push(code.operrand.value());
                 }
                 break;
+            case F_IF:
+                {
+                    auto operrand = dynamic_pointer_cast<InstructionIfStatementLoadOperrand>(code.operrand.value());
+                    if (!operrand) throw runtime_error("FVM: NO OPERRAND FOR IF INSTRUCTION");
+
+                    IfStatement statement = operrand->operrand;
+
+                    shared_ptr<InstructionOperrand> val = pop();
+
+                    if (auto boolean = dynamic_pointer_cast<InstructionBoolOperrand>(val)) {
+                        vector<Instruction> bytecode = statement.bytecode;
+                        if (!boolean->operrand) bytecode = statement.elseBytecode;
+
+                        if (!bytecode.empty()) {
+                            FVM vm(bytecode);
+
+                            for (pair<string, shared_ptr<InstructionOperrand>> scopeMember: scope)  {
+                                vm.scope.insert(scopeMember);
+                            }
+
+                            for (pair<string, FuncDeclaration> funcDeclar: functions)  {
+                                vm.functions.insert(funcDeclar);
+                            }
+
+                            cout << vm.readBytecode() << endl;
+
+                            shared_ptr<InstructionOperrand> result = vm.run();
+
+                            return result != nullptr ? result : make_shared<InstructionNullOperrand>();
+                        }
+                    }
+                }
+                break;
             case F_DELAY:
                 {
                     auto val = dynamic_pointer_cast<InstructionNumberOperrand>(pop());
@@ -147,26 +180,26 @@ shared_ptr<InstructionOperrand> FVM::run() {
                         args.push_back(arg);
                     }
 
-                    FVM funcVM(funcDeclar.bytecode);
+                    FVM vm(funcDeclar.bytecode);
 
                     for (pair<string, shared_ptr<InstructionOperrand>> scopeMember: scope)  {
-                        funcVM.scope.insert(scopeMember);
+                        vm.scope.insert(scopeMember);
                     }
 
                     for (pair<string, FuncDeclaration> funcDeclar: functions)  {
-                        funcVM.functions.insert(funcDeclar);
+                        vm.functions.insert(funcDeclar);
                     }
 
                     for (size_t i = 0; i < argsNum; ++i) {
                         shared_ptr<InstructionOperrand> arg = args.at(i);
                         string id = funcDeclar.argsIds.at(i);
                         
-                        funcVM.scope.insert({ id, arg });
+                        vm.scope.insert({ id, arg });
                     }
 
-                    cout << funcVM.readBytecode() << endl;
+                    cout << vm.readBytecode() << endl;
 
-                    shared_ptr<InstructionOperrand> result = funcVM.run();
+                    shared_ptr<InstructionOperrand> result = vm.run();
 
                     push(result != nullptr ? result : make_shared<InstructionNullOperrand>());
                 }
@@ -198,7 +231,7 @@ shared_ptr<InstructionOperrand> FVM::run() {
             case F_OUTPUT:
                 {
                     shared_ptr<InstructionOperrand> val = pop();
-                    cout << val->tostring() << endl;
+                    cout << "OUTPUT: " + val->tostring() << endl;
                 }
                 break;
             case F_EQ:

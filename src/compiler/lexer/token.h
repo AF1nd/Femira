@@ -40,6 +40,9 @@ enum TokenType {
     SMALLER_OR_EQ,
     AND,
 
+    IF,
+    ELSE,
+
     BEGIN,
     END,
 };

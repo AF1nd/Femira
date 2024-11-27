@@ -110,6 +110,19 @@ struct FnDefineNode : AstNode {
     };
 };
 
+struct IfStatementNode : AstNode {
+    BlockNode* block;
+    BlockNode* elseBlock;
+    AstNode* condition;
+
+    IfStatementNode() = default;
+
+    string tostr() override {
+        return "[ if statement ]";
+    }
+};
+
+
 class Parser {
     private:
         vector<Token> _tokens;
@@ -130,6 +143,7 @@ class Parser {
         
         IdentifierNode* parseIdentifier();
 
+        IfStatementNode* parseIfStatement();
         ParenthisizedNode* parseParenthisized();
         LiteralNode* parseLiteral();
         BlockNode* parseBlock();
