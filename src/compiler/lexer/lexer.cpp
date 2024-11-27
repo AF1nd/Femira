@@ -57,6 +57,8 @@ string getTokenTypeString(int type) {
             return "BIGGER_OR_EQ";
         case SMALLER_OR_EQ:
             return "SMALLER_OR_EQ";
+        case AND:
+            return "AND";
         case BEGIN:
             return "BEGIN";
         case TRUE:

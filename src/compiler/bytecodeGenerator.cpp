@@ -54,7 +54,7 @@ void BytecodeGenerator::visitNode(AstNode* node) {
 
             else if (operatorType == BIGGER_OR_EQ) instr = Instruction(Bytecode(F_BIGGER_OR_EQ));
             else if (operatorType == SMALLER_OR_EQ) instr = Instruction(Bytecode(F_SMALLER_OR_EQ));
-
+            else if (operatorType == AND) instr = Instruction(Bytecode(F_AND));
 
             bytecode.push_back(instr);
         } else if (LiteralNode* literal = dynamic_cast<LiteralNode*>(node)) {

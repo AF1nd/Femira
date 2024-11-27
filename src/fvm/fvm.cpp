@@ -55,6 +55,9 @@ string opcodeToString(Bytecode opcode) {
         case F_NOTEQ:
             return "NOTEQ";
             break;
+        case F_AND:
+            return "AND";
+            break;
         case F_BIGGER:
             return "BIGGER";
             break;
@@ -280,6 +283,18 @@ shared_ptr<InstructionOperrand> FVM::run() {
                     shared_ptr<InstructionOperrand> two = pop();
 
                     push(make_shared<InstructionBoolOperrand>(binaryNumbersCondition(two, one, F_SMALLER_OR_EQ)));
+                }
+                break;
+            case F_AND:
+                {
+                    shared_ptr<InstructionOperrand> one = pop();
+                    shared_ptr<InstructionOperrand> two = pop();
+
+                    if (auto oneCasted = dynamic_pointer_cast<InstructionBoolOperrand>(one)) {
+                        if (auto twoCasted = dynamic_pointer_cast<InstructionBoolOperrand>(two)) {
+                            push(make_shared<InstructionBoolOperrand>(oneCasted->operrand == true && twoCasted->operrand == true));
+                        }
+                    }
                 }
                 break;
             case F_ADD:

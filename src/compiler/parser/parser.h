@@ -118,7 +118,7 @@ struct IfStatementNode : AstNode {
     IfStatementNode() = default;
 
     string tostr() override {
-        return "[ if statement ]";
+        return "[ if statement: " + condition->tostr() + " ]";
     }
 };
 

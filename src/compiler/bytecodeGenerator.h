@@ -13,6 +13,8 @@ class BytecodeGenerator {
     public:
         vector<Instruction> bytecode;
         
+        bool addAnd;
+        
         BlockNode* root;
         BytecodeGenerator(BlockNode* root);
         

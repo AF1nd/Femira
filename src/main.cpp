@@ -14,7 +14,7 @@ int main() {
     const string code =
         R"(
             def check(a):
-                if a == 5:
+                if (a > 2) & (a < 4):
                     return 'правда'
                 end
                 else:
@@ -22,8 +22,7 @@ int main() {
                 end
             end
 
-            output check(5)
-            output check(6)
+            output check(3)
         )";
 
     Lexer newLexer(code);
