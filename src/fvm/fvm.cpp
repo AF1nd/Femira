@@ -153,8 +153,14 @@ shared_ptr<InstructionOperrand> FVM::run() {
                 {
                     auto adr = dynamic_pointer_cast<InstructionStringOperrand>(code.operrand.value());
                     if (adr) {
-                        auto val = scope.at(adr->operrand);
-                        if (val) push(val);
+                        try {
+                            auto val = scope.at(adr->operrand);
+                            if (val) push(val);
+                        }
+                        catch(const std::exception& e) {
+                            throw runtime_error("FVM: BY ADDRESS " + adr->operrand + " NOT FINDED ANYTHING");
+                        }
+                        
                     } else throw runtime_error("FVM: FOR GETVAR EXPECTED ADDERS (OPERRAND)");
                 }
                 break;
