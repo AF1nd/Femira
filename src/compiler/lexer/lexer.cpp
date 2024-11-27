@@ -53,6 +53,10 @@ string getTokenTypeString(int type) {
             return "BIGGER";
         case SMALLER:
             return "SMALLER";
+        case BIGGER_OR_EQ:
+            return "BIGGER_OR_EQ";
+        case SMALLER_OR_EQ:
+            return "SMALLER_OR_EQ";
         case BEGIN:
             return "BEGIN";
         case END:
@@ -97,13 +101,16 @@ Lexer::Lexer(string code) {
 
         make_pair("!=", NOTEQ ),
         make_pair("==", EQ ),
-        make_pair("=", ASSIGN ),
 
         make_pair(">=", BIGGER_OR_EQ ),
         make_pair("<=", SMALLER_OR_EQ ),
+
+        make_pair("=", ASSIGN ),
  
         make_pair(">", BIGGER ),
         make_pair("<", SMALLER ),
+
+        make_pair("&", AND ),
 
         make_pair(":", BEGIN ),
         make_pair("end", END ),

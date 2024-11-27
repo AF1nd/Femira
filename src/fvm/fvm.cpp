@@ -49,6 +49,24 @@ string opcodeToString(Bytecode opcode) {
         case F_DIV:
             return "DIV";
             break;
+        case F_EQ:
+            return "EQ";
+            break;
+        case F_NOTEQ:
+            return "NOTEQ";
+            break;
+        case F_BIGGER:
+            return "BIGGER";
+            break;
+        case F_SMALLER:
+            return "SMALLER";
+            break;
+        case F_BIGGER_OR_EQ:
+            return "BIGGER_OR_EQ";
+            break;
+        case F_SMALLER_OR_EQ:
+            return "SMALLER_OR_EQ";
+            break;
         default:
             break;
     }
@@ -56,6 +74,19 @@ string opcodeToString(Bytecode opcode) {
     return "unknown";
 };
 
+bool binaryNumbersCondition(shared_ptr<InstructionOperrand> one, shared_ptr<InstructionOperrand> two, Bytecode opcode) {
+    auto oneCasted = dynamic_pointer_cast<InstructionNumberOperrand>(one);
+    auto twoCasted = dynamic_pointer_cast<InstructionNumberOperrand>(two);
+
+    if (oneCasted && twoCasted) {
+        if (opcode == F_BIGGER) return oneCasted->operrand > twoCasted->operrand;
+        if (opcode == F_SMALLER) return oneCasted->operrand < twoCasted->operrand;
+        if (opcode == F_BIGGER_OR_EQ) return oneCasted->operrand >= twoCasted->operrand;
+        if (opcode == F_SMALLER_OR_EQ) return oneCasted->operrand <= twoCasted->operrand;
+    } else throw runtime_error("FVM: BINARY CONDITION WITH OPCODE " + opcodeToString(opcode) + " CAN WORK ONLY WITH NUMBERS!");
+
+    return false;
+}
 
 FVM::FVM(vector<Instruction> bytecode) {
     this->bytecode = bytecode;
@@ -170,11 +201,61 @@ shared_ptr<InstructionOperrand> FVM::run() {
                     cout << val->tostring() << endl;
                 }
                 break;
+            case F_EQ:
+                {
+                    shared_ptr<InstructionOperrand> one = pop();
+                    shared_ptr<InstructionOperrand> two = pop();
+
+                    push(make_shared<InstructionBoolOperrand>(one->isEq(two)));
+                }
+                break;
+            case F_NOTEQ:
+                {
+                    shared_ptr<InstructionOperrand> one = pop();
+                    shared_ptr<InstructionOperrand> two = pop();
+
+                    push(make_shared<InstructionBoolOperrand>(!(one->isEq(two))));
+                }
+                break;
+            case F_BIGGER:
+                {
+                    shared_ptr<InstructionOperrand> one = pop();
+                    shared_ptr<InstructionOperrand> two = pop();
+
+                    push(make_shared<InstructionBoolOperrand>(binaryNumbersCondition(two, one, F_BIGGER)));
+                }
+                break;
+            case F_SMALLER:
+                {
+                    shared_ptr<InstructionOperrand> one = pop();
+                    shared_ptr<InstructionOperrand> two = pop();
+
+                    push(make_shared<InstructionBoolOperrand>(binaryNumbersCondition(two, one, F_SMALLER)));
+                }
+                break;
+            case F_BIGGER_OR_EQ:
+                {
+                    shared_ptr<InstructionOperrand> one = pop();
+                    shared_ptr<InstructionOperrand> two = pop();
+
+                    push(make_shared<InstructionBoolOperrand>(binaryNumbersCondition(two, one, F_BIGGER_OR_EQ)));
+                }
+                break;
+            case F_SMALLER_OR_EQ:
+                {
+                    shared_ptr<InstructionOperrand> one = pop();
+                    shared_ptr<InstructionOperrand> two = pop();
+
+                    push(make_shared<InstructionBoolOperrand>(binaryNumbersCondition(two, one, F_SMALLER_OR_EQ)));
+                }
+                break;
             case F_ADD:
                 {
                     auto val1 = dynamic_pointer_cast<InstructionNumberOperrand>(pop());
                     auto val2 = dynamic_pointer_cast<InstructionNumberOperrand>(pop());
-                    push(make_shared<InstructionNumberOperrand>(val1->operrand + val2->operrand));
+
+                    if (val1 && val2) push(make_shared<InstructionNumberOperrand>(val1->operrand + val2->operrand));
+                    else throw runtime_error("FVM: ADD ERROR! OPERRANDS MUST BE A NUMBERS");
                 }
                 break;
             case F_SUB:
@@ -182,7 +263,8 @@ shared_ptr<InstructionOperrand> FVM::run() {
                     auto val1 = dynamic_pointer_cast<InstructionNumberOperrand>(pop());
                     auto val2 = dynamic_pointer_cast<InstructionNumberOperrand>(pop());
 
-                    push(make_shared<InstructionNumberOperrand>(val2->operrand - val1->operrand));
+                    if (val1 && val2) push(make_shared<InstructionNumberOperrand>(val2->operrand - val1->operrand));
+                    else throw runtime_error("FVM: SUB ERROR! OPERRANDS MUST BE A NUMBERS");
                 }
                 break;
             case F_MUL:
@@ -190,14 +272,17 @@ shared_ptr<InstructionOperrand> FVM::run() {
                     auto val1 = dynamic_pointer_cast<InstructionNumberOperrand>(pop());
                     auto val2 = dynamic_pointer_cast<InstructionNumberOperrand>(pop());
 
-                    push(make_shared<InstructionNumberOperrand>(val1->operrand * val2->operrand));
+                    if (val1 && val2) push(make_shared<InstructionNumberOperrand>(val1->operrand * val2->operrand));
+                    else throw runtime_error("FVM: MUL ERROR! OPERRANDS MUST BE A NUMBERS");
                 }
                 break;
             case F_DIV:
                 {
                     auto val1 = dynamic_pointer_cast<InstructionNumberOperrand>(pop());
                     auto val2 = dynamic_pointer_cast<InstructionNumberOperrand>(pop());
-                    push(make_shared<InstructionNumberOperrand>(val2->operrand / val1->operrand));
+
+                    if (val1 && val2) push(make_shared<InstructionNumberOperrand>(val2->operrand / val1->operrand));
+                    else throw runtime_error("FVM: DIV ERROR! OPERRANDS MUST BE A NUMBERS");
                 }
                 break;
             default:
@@ -237,7 +322,7 @@ string FVM::readBytecode() {
 
         string opcodeName = opcodeToString(code.code);
 
-        str += "\n  > " + (opcodeName != "unknown" ? opcodeName : to_string(code.code)) + " " + opStr + " " + opStr2;
+        str += "\n  > " + to_string(code.code) + " | " + (opcodeName != "unknown" ? opcodeName : to_string(code.code)) + " " + opStr + " " + opStr2;
     }
 
     return "[ BYTECODE ]" + str;

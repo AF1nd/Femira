@@ -13,11 +13,15 @@ int main() {
 
     const string code =
         R"(
-            def sum(num1, num2):
-                return num1 + num2
+            def getOne():
+                return 5
             end
 
-            output (sum(10, 15))
+            def getTwo():
+                return 6
+            end
+
+            output getTwo() > getOne()
         )";
 
     Lexer newLexer(code);

@@ -28,7 +28,8 @@ Parser::Parser(vector<Token> tokens) {
         SMALLER, 
         BIGGER_OR_EQ, 
         SMALLER_OR_EQ,
-        ASSIGN
+        ASSIGN,
+        AND
     };
 
     literalTokens = {

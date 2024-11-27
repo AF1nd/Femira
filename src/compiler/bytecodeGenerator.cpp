@@ -46,6 +46,15 @@ void BytecodeGenerator::visitNode(AstNode* node) {
             else if (operatorType == MINUS) instr = Instruction(Bytecode(F_SUB));
             else if (operatorType == MUL) instr = Instruction(Bytecode(F_MUL));
             else if (operatorType == DIV) instr = Instruction(Bytecode(F_DIV));
+            
+            else if (operatorType == EQ) instr = Instruction(Bytecode(F_EQ));
+            else if (operatorType == NOTEQ) instr = Instruction(Bytecode(F_NOTEQ));
+            else if (operatorType == BIGGER) instr = Instruction(Bytecode(F_BIGGER));
+            else if (operatorType == SMALLER) instr = Instruction(Bytecode(F_SMALLER));
+
+            else if (operatorType == BIGGER_OR_EQ) instr = Instruction(Bytecode(F_BIGGER_OR_EQ));
+            else if (operatorType == SMALLER_OR_EQ) instr = Instruction(Bytecode(F_SMALLER_OR_EQ));
+
 
             bytecode.push_back(instr);
         } else if (LiteralNode* literal = dynamic_cast<LiteralNode*>(node)) {

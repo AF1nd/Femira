@@ -28,11 +28,24 @@ enum Bytecode {
     F_MUL,
     F_DIV,
     F_SUB,
+
+    F_EQ,
+    F_NOTEQ,
+    F_BIGGER,
+    F_SMALLER,
+
+    F_BIGGER_OR_EQ,
+    F_SMALLER_OR_EQ,
+
+    F_AND,
 };
 
 struct InstructionOperrand {
     any operrand;
+
     virtual string tostring() const = 0; 
+
+    virtual bool isEq(shared_ptr<InstructionOperrand> toEq) { return false; };
 };
 
 struct InstructionNullOperrand : InstructionOperrand {
@@ -42,6 +55,11 @@ struct InstructionNullOperrand : InstructionOperrand {
 
     string tostring() const override {
         return "NULL";
+    }
+
+    bool isEq(shared_ptr<InstructionOperrand> toEq) override {
+        if (auto casted = dynamic_pointer_cast<InstructionNullOperrand>(toEq)) return true;
+        return false;
     }
 };
 
@@ -53,6 +71,11 @@ struct InstructionNumberOperrand : InstructionOperrand {
     string tostring() const override {
         return to_string(operrand);
     }
+    
+    bool isEq(shared_ptr<InstructionOperrand> toEq) override {
+        if (auto casted = dynamic_pointer_cast<InstructionNumberOperrand>(toEq)) return operrand == casted->operrand;
+        return false;
+    }
 };
 
 struct InstructionStringOperrand : InstructionOperrand {
@@ -62,6 +85,11 @@ struct InstructionStringOperrand : InstructionOperrand {
 
     string tostring() const override  {
         return operrand;
+    }
+
+    bool isEq(shared_ptr<InstructionOperrand> toEq) override {
+        if (auto casted = dynamic_pointer_cast<InstructionStringOperrand>(toEq)) return operrand == casted->operrand;
+        return false;
     }
 };
 
@@ -73,6 +101,11 @@ struct InstructionBoolOperrand : InstructionOperrand {
     string tostring() const override  {
         string str = operrand == true ? "true" : "false";
         return str;
+    }
+
+    bool isEq(shared_ptr<InstructionOperrand> toEq) override {
+        if (auto casted = dynamic_pointer_cast<InstructionBoolOperrand>(toEq)) return operrand == casted->operrand;
+        return false;
     }
 };
 
