@@ -76,45 +76,45 @@ Lexer::Lexer(string code) {
     _code = code;
 
     _tokenTypesPatterns = {
-        { "[+-]?([0-9]*[.])?[0-9]+", NUMBER },
-        {"'[^']*'", STRING },
-        {"true", TRUE },
-        {"false", FALSE },
-        {"null", NULLT },
+        make_pair("'[^']*'", STRING),
+        make_pair("true", TRUE ),
+        make_pair("false", FALSE ),
+        make_pair("null", NULLT ),
 
-        {";", SEMICOLON },
-        { "\\s+", WHITESPACE },
+        make_pair(";", SEMICOLON ),
+        make_pair("\\s+", WHITESPACE ),
 
-        { "\\(", LBRACKET },
-        { "\\)", RBRACKET },
+        make_pair("\\(", LBRACKET ),
+        make_pair("\\)", RBRACKET ),
 
-        { ",", COMMA },
-        { "\\.", DOT },
+        make_pair(",", COMMA ),
+        make_pair("\\.", DOT ),
 
-        { "\\+", PLUS },
-        { "\\-", MINUS },
-        { "\\/", DIV },
-        { "\\*", MUL },
+        make_pair("\\+", PLUS ),
+        make_pair("\\-", MINUS ),
+        make_pair("\\/", DIV ),
+        make_pair("\\*", MUL ),
 
-        { "!=", NOTEQ },
-        { "==", EQ },
-        { "=", ASSIGN },
+        make_pair("!=", NOTEQ ),
+        make_pair("==", EQ ),
+        make_pair("=", ASSIGN ),
 
-        { ">=", BIGGER_OR_EQ },
-        { "<=", SMALLER_OR_EQ },
+        make_pair(">=", BIGGER_OR_EQ ),
+        make_pair("<=", SMALLER_OR_EQ ),
  
-        { ">", BIGGER },
-        { "<", SMALLER },
+        make_pair(">", BIGGER ),
+        make_pair("<", SMALLER ),
 
-        { ":", BEGIN },
-        { "end", END },
-        { "def", DEF },
+        make_pair(":", BEGIN ),
+        make_pair("end", END ),
+        make_pair("def", DEF ),
 
-        { "return", RETURN },
-        { "delay", DELAY },
-        { "output", OUTPUT },
+        make_pair("return", RETURN ),
+        make_pair("delay", DELAY ),
+        make_pair("output", OUTPUT ),
 
-        { "[a-zA-Z_][a-zA-Z0-9_]*", ID },
+        make_pair("[a-zA-Z_][a-zA-Z0-9_]*", ID ),
+        make_pair("[+-]?([0-9]*[.])?[0-9]+", NUMBER ),
     };
 }
 
@@ -169,6 +169,8 @@ vector<Token> Lexer::tokenize() {
     copy_if(_tokens.begin(), _tokens.end(), std::back_inserter(tokens), [](Token token) {
         return token.getType() != WHITESPACE && token.getType() != NEWLINE;
     });
+
+    sort(tokens.begin(), tokens.end(), compareTokens);
 
     for (Token v: tokens) {
         cout << " [ " + getTokenTypeString(v.getType()) + " ] [ " + v.getValue() + " ] [ " + to_string(v.getPosition()) + " ] [ " + to_string(v.getEndPosition()) + " ] " << endl;

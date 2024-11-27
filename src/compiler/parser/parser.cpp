@@ -152,7 +152,6 @@ LiteralNode* Parser::parseLiteral() {
     return node;
 }
 
-
 UnaryOperationNode* Parser::parseUnaryOperation() {
     Token operatorToken = consume(unaryOperationsTokens);
     AstNode* expr = parseExpression();
@@ -196,6 +195,10 @@ BinaryOperationNode* Parser::parseBinaryOperation(AstNode* left) {
     node->left = left;
     node->operatorToken = operatorToken;
     node->right = right;
+     
+    if (BinaryOperationNode* binary = dynamic_cast<BinaryOperationNode*>(right)) {
+        
+    }
 
     return node;
 };
@@ -219,6 +222,7 @@ ArgsNode* Parser::parseArgs() {
         AstNode* expr = parseExpression();
         
         if (expr != nullptr) args.push_back(expr);
+        else break;
 
         if (match({ COMMA })) consume({ COMMA });
     }

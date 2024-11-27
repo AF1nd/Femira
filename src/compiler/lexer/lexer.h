@@ -3,7 +3,7 @@
 
 #include <iostream>
 #include <vector>
-#include <map>
+#include <array>
 #include "token.h"
 
 using namespace std;
@@ -12,7 +12,7 @@ string getTokenTypeString(int type);
 
 class Lexer {
     private:
-        map<string, TokenType> _tokenTypesPatterns;
+        array<pair<string, TokenType>, 29> _tokenTypesPatterns;
 
         vector<Token> _tokens;
         string _code;
