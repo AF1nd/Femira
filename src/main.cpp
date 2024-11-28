@@ -9,8 +9,6 @@
 using namespace std;
 
 int main() {
-    cout << "Femlang started work" << endl;
-
     const string code =
         R"(
             output (1 + 1) + 1
