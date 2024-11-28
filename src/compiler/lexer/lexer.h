@@ -12,14 +12,14 @@ string getTokenTypeString(int type);
 
 class Lexer {
     private:
-        array<pair<string, TokenType>, 33> _tokenTypesPatterns;
+        array<pair<string, TokenType>, 34> _tokenTypesPatterns;
 
         vector<Token> _tokens;
         string _code;
     public: 
         Lexer(string code);
 
-        vector<Token> tokenize();
+        vector<Token> tokenize(bool logs);
 };
 
 #endif

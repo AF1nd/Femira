@@ -15,6 +15,7 @@ Parser::Parser(vector<Token> tokens) {
         RETURN,
         DELAY,
         OUTPUT,
+        USING,
     };
 
     binaryOperationsTokens = {
@@ -282,8 +283,6 @@ FnDefineNode* Parser::parseFunctionDefinition() {
     IdentifierNode* id = parseIdentifier();
     ArgsNode* args = parseArgs();
     BlockNode* block = parseBlock();
-
-    cout << id->tostr() << endl;
 
     FnDefineNode* node = new FnDefineNode();
     node->args = args;

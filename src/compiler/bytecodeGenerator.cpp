@@ -2,15 +2,28 @@
 #include <iostream>
 #include <vector>
 #include <algorithm>
+#include <fstream> 
+#include <string>
 
 #include "./lexer/lexer.h"
 #include "./parser/parser.h"
 #include "../fvm/fvm.h"
 #include "bytecodeGenerator.h"
+#include "compiler.h"
 
-template<typename Base, typename T>
-inline bool instanceof(const T *ptr) {
-    return dynamic_cast<const Base*>(ptr) != nullptr;
+string readFile(string path) {
+    ifstream file(path);
+
+    string code;
+    string line;
+
+    while (getline(file, line)) {
+        code += line + "\n";
+    }
+
+    file.close();
+
+    return code;
 }
 
 using namespace std;
@@ -94,6 +107,29 @@ void BytecodeGenerator::visitNode(AstNode* node) {
             Token token = unary->operatorToken;
             TokenType unaryType = token.getType();
 
+            if (unaryType == USING) {
+                AstNode* operrand = unary->operrand;
+                if (LiteralNode* operrandCasted = dynamic_cast<LiteralNode*>(operrand)) {
+                    if (operrandCasted->token.getType() == STRING) {
+                        string path = operrandCasted->token.getValue();
+                        path = path.substr(1, path.length() - 2);
+
+                        string code = readFile(path);
+
+                        Compiler newCompiler;
+                        vector<Instruction> importedBytecode = newCompiler.compile(code);
+
+                        for (Instruction importedInstruction: importedBytecode) {
+                            bytecode.insert(bytecode.begin(), importedInstruction);
+                        }
+
+                        return;
+                    }
+                }
+
+                throw runtime_error("Compile error! Cant import module");
+            }
+
             visitNode(unary->operrand);
 
             if (unaryType == RETURN) bytecode.push_back(Instruction(Bytecode(F_RETURN)));
@@ -136,5 +172,6 @@ void BytecodeGenerator::visitNode(AstNode* node) {
 
 vector<Instruction> BytecodeGenerator::generate() {
     visitNode(root);
+    
     return bytecode;
 }

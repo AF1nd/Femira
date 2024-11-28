@@ -46,6 +46,8 @@ enum TokenType {
 
     BEGIN,
     END,
+
+    USING,
 };
 
 class Token {

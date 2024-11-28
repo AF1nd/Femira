@@ -42,7 +42,9 @@ enum Bytecode {
     F_ELSE,
 
     F_AND,
-    F_OR
+    F_OR,
+
+    
 };
 
 struct InstructionOperrand {
@@ -173,20 +175,16 @@ struct InstructionIfStatementLoadOperrand : InstructionOperrand {
 
 class FVM {
     public:
-        vector<Instruction> bytecode;
         stack<shared_ptr<InstructionOperrand>> vmStack;
-        map<string, shared_ptr<InstructionOperrand>> scope;
-
-        map<string, FuncDeclaration> functions;
   
-        shared_ptr<InstructionOperrand> run();
-        FVM(vector<Instruction> bytecode, bool logs);
+        shared_ptr<InstructionOperrand> run(vector<Instruction> bytecode, map<string, FuncDeclaration> functions = {}, map<string, shared_ptr<InstructionOperrand>> scope = {});
+        FVM(bool logs);
 
         void push(shared_ptr<InstructionOperrand> operrand);
 
         shared_ptr<InstructionOperrand> pop();
 
-        string readBytecode();
+        string getBytecodeString(vector<Instruction> bytecode);
 
         bool logs;
 };

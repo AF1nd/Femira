@@ -81,6 +81,8 @@ string getTokenTypeString(int type) {
             return "DELAY";
         case OUTPUT:
             return "OUTPUT";
+        case USING:
+            return "USING";
         default:
             return "";
     }
@@ -95,55 +97,57 @@ Lexer::Lexer(string code) {
 
     _tokenTypesPatterns = {
         make_pair("'[^']*'", STRING),
-        make_pair("true", TRUE ),
-        make_pair("false", FALSE ),
-        make_pair("null", NULLT ),
+        make_pair("true", TRUE),
+        make_pair("false", FALSE),
+        make_pair("null", NULLT),
 
-        make_pair(";", SEMICOLON ),
-        make_pair("\\s+", WHITESPACE ),
+        make_pair(";", SEMICOLON),
+        make_pair("\\s+", WHITESPACE),
 
-        make_pair("\\(", LBRACKET ),
-        make_pair("\\)", RBRACKET ),
+        make_pair("\\(", LBRACKET),
+        make_pair("\\)", RBRACKET),
 
-        make_pair(",", COMMA ),
-        make_pair("\\.", DOT ),
+        make_pair(",", COMMA),
+        make_pair("\\.", DOT),
 
-        make_pair("\\+", PLUS ),
-        make_pair("\\-", MINUS ),
-        make_pair("\\/", DIV ),
-        make_pair("\\*", MUL ),
+        make_pair("\\+", PLUS),
+        make_pair("\\-", MINUS),
+        make_pair("\\/", DIV),
+        make_pair("\\*", MUL),
 
-        make_pair("!=", NOTEQ ),
-        make_pair("==", EQ ),
+        make_pair("!=", NOTEQ),
+        make_pair("==", EQ),
 
-        make_pair(">=", BIGGER_OR_EQ ),
-        make_pair("<=", SMALLER_OR_EQ ),
+        make_pair(">=", BIGGER_OR_EQ),
+        make_pair("<=", SMALLER_OR_EQ),
 
-        make_pair("=", ASSIGN ),
+        make_pair("=", ASSIGN),
  
-        make_pair(">", BIGGER ),
-        make_pair("<", SMALLER ),
+        make_pair(">", BIGGER),
+        make_pair("<", SMALLER),
 
-        make_pair("&", AND ),
-        make_pair("\\?", OR ),
+        make_pair("&", AND),
+        make_pair("\\?", OR),
 
-        make_pair(":", BEGIN ),
-        make_pair("end", END ),
-        make_pair("fn", DEF ),
+        make_pair(":", BEGIN),
+        make_pair("end", END),
+        make_pair("fn", DEF),
         
-        make_pair("if", IF ),
-        make_pair("else", ELSE ),
+        make_pair("if", IF),
+        make_pair("else", ELSE),
 
-        make_pair("return", RETURN ),
-        make_pair("delay", DELAY ),
-        make_pair("output", OUTPUT ),
+        make_pair("return", RETURN),
+        make_pair("delay", DELAY),
+        make_pair("output", OUTPUT),
 
-        make_pair("[a-zA-Z_][a-zA-Z0-9_]*", ID ),
-        make_pair("[+-]?([0-9]*[.])?[0-9]+", NUMBER ),
+        make_pair("using", USING),
+
+        make_pair("[a-zA-Z_][a-zA-Z0-9_]*", ID),
+        make_pair("[+-]?([0-9]*[.])?[0-9]+", NUMBER),
     };
 }
 
-vector<Token> Lexer::tokenize() {
+vector<Token> Lexer::tokenize(bool logs) {
     vector<TokenPositionBusy> busy;
 
     for (pair<string, TokenType> v: _tokenTypesPatterns) {
@@ -197,8 +201,10 @@ vector<Token> Lexer::tokenize() {
 
     sort(tokens.begin(), tokens.end(), compareTokens);
 
-    for (Token v: tokens) {
-        cout << " [ " + getTokenTypeString(v.getType()) + " ] [ " + v.getValue() + " ] [ " + to_string(v.getPosition()) + " ] [ " + to_string(v.getEndPosition()) + " ] " << endl;
+    if (logs) {
+        for (Token v: tokens) {
+            cout << " [ " + getTokenTypeString(v.getType()) + " ] [ " + v.getValue() + " ] [ " + to_string(v.getPosition()) + " ] [ " + to_string(v.getEndPosition()) + " ] " << endl;
+        }
     }
 
     return tokens;
