@@ -25,5 +25,5 @@ void Runner::run(string path) {
     Compiler compiler;
 
     FVM fvm(false);
-    fvm.run(compiler.compile(read(path), path));
+    fvm.run(compiler.compile(read(path)));
 }
