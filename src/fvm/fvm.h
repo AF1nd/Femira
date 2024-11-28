@@ -179,13 +179,15 @@ class FVM {
         map<string, FuncDeclaration> functions;
   
         shared_ptr<InstructionOperrand> run();
-        FVM(vector<Instruction> bytecode);
+        FVM(vector<Instruction> bytecode, bool logs);
 
         void push(shared_ptr<InstructionOperrand> operrand);
 
         shared_ptr<InstructionOperrand> pop();
 
         string readBytecode();
+
+        bool logs;
 };
 
 #endif

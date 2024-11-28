@@ -32,9 +32,7 @@ int main() {
 
     auto bytecode = BytecodeGenerator(ast).generate();
 
-    FVM vm(bytecode);
-
-    cout << vm.readBytecode() << endl;
+    FVM vm(bytecode, false);
 
     cout << "<RESULT>" << endl;
     

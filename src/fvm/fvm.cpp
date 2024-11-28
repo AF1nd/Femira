@@ -91,11 +91,14 @@ bool binaryNumbersCondition(shared_ptr<InstructionOperrand> one, shared_ptr<Inst
     return false;
 }
 
-FVM::FVM(vector<Instruction> bytecode) {
+FVM::FVM(vector<Instruction> bytecode, bool logs) {
     this->bytecode = bytecode;
+    this->logs = logs;
 }
 
 shared_ptr<InstructionOperrand> FVM::run() {
+    if (logs) cout << readBytecode() << endl;
+
     for (Instruction code: bytecode) {
         switch (code.code) {
             case F_PUSH:
@@ -121,7 +124,7 @@ shared_ptr<InstructionOperrand> FVM::run() {
                         if (!boolean->operrand) bytecode = statement.elseBytecode;
 
                         if (!bytecode.empty()) {
-                            FVM vm(bytecode);
+                            FVM vm(bytecode, logs);
 
                             for (pair<string, shared_ptr<InstructionOperrand>> scopeMember: scope)  {
                                 vm.scope.insert(scopeMember);
@@ -130,8 +133,6 @@ shared_ptr<InstructionOperrand> FVM::run() {
                             for (pair<string, FuncDeclaration> funcDeclar: functions)  {
                                 vm.functions.insert(funcDeclar);
                             }
-
-                            cout << vm.readBytecode() << endl;
 
                             shared_ptr<InstructionOperrand> result = vm.run();
 
@@ -183,7 +184,7 @@ shared_ptr<InstructionOperrand> FVM::run() {
                         args.push_back(arg);
                     }
 
-                    FVM vm(funcDeclar.bytecode);
+                    FVM vm(funcDeclar.bytecode, logs);
 
                     for (pair<string, shared_ptr<InstructionOperrand>> scopeMember: scope)  {
                         vm.scope.insert(scopeMember);
@@ -199,8 +200,6 @@ shared_ptr<InstructionOperrand> FVM::run() {
                         
                         vm.scope.insert({ id, arg });
                     }
-
-                    cout << vm.readBytecode() << endl;
 
                     shared_ptr<InstructionOperrand> result = vm.run();
 
