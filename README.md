@@ -12,7 +12,7 @@ A simple programming language that compiles into vm bytecode
 define function:
 
 ```
-def sum(arg1, arg2):
+fn sum(arg1, arg2):
    return arg1 + arg2
 end
 
