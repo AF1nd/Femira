@@ -13,16 +13,7 @@ int main() {
 
     const string code =
         R"(
-            def check(a):
-                if (a > 2) & (a < 4):
-                    return 'правда'
-                end
-                else:
-                    return 'фейк'
-                end
-            end
-
-            output check(3)
+            output (1 + 1) + 1
         )";
 
     Lexer newLexer(code);

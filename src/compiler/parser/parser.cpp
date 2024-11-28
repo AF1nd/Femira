@@ -39,9 +39,17 @@ Parser::Parser(vector<Token> tokens) {
         TRUE,
         FALSE
     };
+
+    operatorPriorities = {
+        { MUL, 2 },
+        { DIV, 2 },
+        { PLUS, 1 },
+        { MINUS, 1 },
+        { AND, 5 }
+    };
 }
 
-Token Parser::consume(vector<TokenType> tokenTypes) {
+Token Parser::eat(vector<TokenType> tokenTypes) {
     vector<string> types = {};
 
     for (TokenType v: tokenTypes) {
@@ -100,13 +108,13 @@ BlockNode* Parser::parse() {
 
         block->nodes.push_back(expr);
 
-        if (match({ SEMICOLON })) consume({ SEMICOLON });
+        if (match({ SEMICOLON })) eat({ SEMICOLON });
     }
 
     return block;
 }
 
-AstNode* Parser::parseExpression() {
+AstNode* Parser::parseExpression(bool isParenthisized) {
     AstNode* node = nullptr;
 
     if (match({ DEF })) node = parseFunctionDefinition();
@@ -125,7 +133,7 @@ AstNode* Parser::parseExpression() {
     if (node) {
         if (match({ LBRACKET })) node = parseCall(node);
         if (match(binaryOperationsTokens)) {
-            node = parseBinaryOperation(node);
+            node = parseBinaryOperation(node, isParenthisized);
         }
     }
 
@@ -133,7 +141,7 @@ AstNode* Parser::parseExpression() {
 }
 
 IfStatementNode* Parser::parseIfStatement() {
-    consume({ IF });
+    eat({ IF });
 
     AstNode* condition = parseExpression();
 
@@ -143,7 +151,7 @@ IfStatementNode* Parser::parseIfStatement() {
     BlockNode* elseBlock = nullptr;
 
     if (match({ ELSE })) {
-        consume({ ELSE });
+        eat({ ELSE });
 
         elseBlock = parseBlock();
     }
@@ -157,20 +165,20 @@ IfStatementNode* Parser::parseIfStatement() {
 }
 
 ParenthisizedNode* Parser::parseParenthisized() {
-    consume({ LBRACKET });
+    eat({ LBRACKET });
 
-    AstNode* expr = parseExpression();
+    AstNode* expr = parseExpression(true);
 
     ParenthisizedNode* node = new ParenthisizedNode();
     node->wrapped = expr;
 
-    consume({ RBRACKET });
+    eat({ RBRACKET });
 
     return node;
 }
 
 LiteralNode* Parser::parseLiteral() {
-    Token token = consume(literalTokens);
+    Token token = eat(literalTokens);
 
     LiteralNode* node = new LiteralNode();
     node->token = token;
@@ -179,7 +187,7 @@ LiteralNode* Parser::parseLiteral() {
 }
 
 UnaryOperationNode* Parser::parseUnaryOperation() {
-    Token operatorToken = consume(unaryOperationsTokens);
+    Token operatorToken = eat(unaryOperationsTokens);
     AstNode* expr = parseExpression();
 
     UnaryOperationNode* node = new UnaryOperationNode();
@@ -190,7 +198,7 @@ UnaryOperationNode* Parser::parseUnaryOperation() {
 }
 
 BlockNode* Parser::parseBlock() {
-    Token begin = consume({ BEGIN });
+    Token begin = eat({ BEGIN });
 
     vector<AstNode*> blockNodes = {};
 
@@ -200,10 +208,10 @@ BlockNode* Parser::parseBlock() {
 
         blockNodes.push_back(ptr);
 
-        if (match({ SEMICOLON })) consume({ SEMICOLON });
+        if (match({ SEMICOLON })) eat({ SEMICOLON });
     }
 
-    Token end = consume({ END });
+    Token end = eat({ END });
 
     BlockNode* block = new BlockNode();
     block->nodes = blockNodes;
@@ -211,19 +219,21 @@ BlockNode* Parser::parseBlock() {
     return block;
 };
 
-BinaryOperationNode* Parser::parseBinaryOperation(AstNode* left) {
-    Token operatorToken = consume(binaryOperationsTokens);
+BinaryOperationNode* Parser::parseBinaryOperation(AstNode* left, bool isParenthisized) {
+    Token operatorToken = eat(binaryOperationsTokens);
 
     AstNode* right = parseExpression();
+
 
     BinaryOperationNode* node = new BinaryOperationNode();
     
     node->left = left;
     node->operatorToken = operatorToken;
     node->right = right;
-     
-    if (BinaryOperationNode* binary = dynamic_cast<BinaryOperationNode*>(right)) {
-        
+    node->priority = operatorPriorities.at(operatorToken.getType()) || 1;
+
+    if (isParenthisized) {
+        node->priority++;
     }
 
     return node;
@@ -240,7 +250,7 @@ CallNode* Parser::parseCall(AstNode* calling) {
 };
 
 ArgsNode* Parser::parseArgs() {
-    consume({ LBRACKET });
+    eat({ LBRACKET });
 
     vector<AstNode*> args = {};
 
@@ -250,10 +260,10 @@ ArgsNode* Parser::parseArgs() {
         if (expr != nullptr) args.push_back(expr);
         else break;
 
-        if (match({ COMMA })) consume({ COMMA });
+        if (match({ COMMA })) eat({ COMMA });
     }
 
-    consume({ RBRACKET });
+    eat({ RBRACKET });
 
     ArgsNode* node = new ArgsNode();
     node->nodes = args;
@@ -262,7 +272,7 @@ ArgsNode* Parser::parseArgs() {
 }
 
 FnDefineNode* Parser::parseFunctionDefinition() {
-    consume({ DEF });
+    eat({ DEF });
 
     IdentifierNode* id = parseIdentifier();
     ArgsNode* args = parseArgs();
@@ -279,7 +289,7 @@ FnDefineNode* Parser::parseFunctionDefinition() {
 }
 
 IdentifierNode* Parser::parseIdentifier() {
-    Token token = consume({ ID });
+    Token token = eat({ ID });
 
     IdentifierNode* node = new IdentifierNode();
     node->token = token;

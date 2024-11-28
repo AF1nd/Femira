@@ -3,6 +3,7 @@
 
 #include <vector>
 #include "../lexer/token.h"
+#include <map>
 
 using namespace std;
 
@@ -63,10 +64,11 @@ struct BinaryOperationNode : AstNode {
     AstNode* left;
     AstNode* right;
     Token operatorToken;
+    int priority;
     BinaryOperationNode() = default;
 
     string tostr() override {
-        return "[ binary: "  + left->tostr() + " " + operatorToken.getValue() + " " + right->tostr() + " ]";
+        return "[ binary: "  + left->tostr() + " " + operatorToken.getValue() + " " + right->tostr() + + " | " + to_string(priority) + " ]";
     }
 };
 
@@ -131,15 +133,17 @@ class Parser {
         vector<TokenType> unaryOperationsTokens;
         vector<TokenType> binaryOperationsTokens;
         vector<TokenType> literalTokens;
+
+        map<TokenType, int> operatorPriorities;
     public: 
         Parser(vector<Token> tokens);
         BlockNode* parse();
 
         bool match(vector<TokenType> tokenTypes);
         bool lookMatch(vector<TokenType> tokenTypes, int offset);
-        Token consume(vector<TokenType> tokenTypes);
+        Token eat(vector<TokenType> tokenTypes);
         
-        AstNode* parseExpression();
+        AstNode* parseExpression(bool isParenthisized = false);
         
         IdentifierNode* parseIdentifier();
 
@@ -147,7 +151,7 @@ class Parser {
         ParenthisizedNode* parseParenthisized();
         LiteralNode* parseLiteral();
         BlockNode* parseBlock();
-        BinaryOperationNode* parseBinaryOperation(AstNode* left);
+        BinaryOperationNode* parseBinaryOperation(AstNode* left, bool isParenthisized);
         FnDefineNode* parseFunctionDefinition();
         CallNode* parseCall(AstNode* calling);
         ArgsNode* parseArgs();
