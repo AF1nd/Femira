@@ -29,7 +29,8 @@ Parser::Parser(vector<Token> tokens) {
         BIGGER_OR_EQ, 
         SMALLER_OR_EQ,
         ASSIGN,
-        AND
+        AND,
+        OR
     };
 
     literalTokens = {
@@ -224,13 +225,17 @@ BinaryOperationNode* Parser::parseBinaryOperation(AstNode* left, bool isParenthi
 
     AstNode* right = parseExpression();
 
+    int priority = 1;
+    if (operatorPriorities.find(operatorToken.getType()) != operatorPriorities.end()) {
+        priority = operatorPriorities.at(operatorToken.getType());
+    }
 
     BinaryOperationNode* node = new BinaryOperationNode();
     
     node->left = left;
     node->operatorToken = operatorToken;
     node->right = right;
-    node->priority = operatorPriorities.at(operatorToken.getType()) || 1;
+    node->priority = priority;
 
     if (isParenthisized) {
         node->priority++;

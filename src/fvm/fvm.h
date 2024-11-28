@@ -42,6 +42,7 @@ enum Bytecode {
     F_ELSE,
 
     F_AND,
+    F_OR
 };
 
 struct InstructionOperrand {

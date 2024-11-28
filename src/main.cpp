@@ -11,7 +11,12 @@ using namespace std;
 int main() {
     const string code =
         R"(
-            output (1 + 1) + 1
+            fn get(a, b):
+                return a ? b
+            end
+
+            output get(null, 5)
+            output get(10, 5)
         )";
 
     Lexer newLexer(code);

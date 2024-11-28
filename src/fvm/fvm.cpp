@@ -296,6 +296,18 @@ shared_ptr<InstructionOperrand> FVM::run() {
                     }
                 }
                 break;
+            case F_OR:
+                {
+                    shared_ptr<InstructionOperrand> one = pop();
+                    shared_ptr<InstructionOperrand> two = pop();
+
+                    bool isFalse = false;
+                    if (auto casted = dynamic_pointer_cast<InstructionBoolOperrand>(two)) isFalse = !casted->operrand;
+
+                    if (dynamic_pointer_cast<InstructionNullOperrand>(two) || isFalse) push(one);
+                    else push(two);
+                }
+                break;
             case F_ADD:
                 {
                     auto val1 = dynamic_pointer_cast<InstructionNumberOperrand>(pop());
