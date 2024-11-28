@@ -4,10 +4,10 @@ A simple programming language that compiles into vm bytecode
 
 ## Language basics:
 
-":" - start block,
-"end" - end block,
+":" - start block |
+"end" - end block
 
-"output" - print operator,
+"output" - print operator
 
 define function:
 
