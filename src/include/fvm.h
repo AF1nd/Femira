@@ -8,6 +8,7 @@
 #include <memory>
 #include <optional>
 #include <map>
+#include <variant>
 
 using namespace std;
 
@@ -64,7 +65,8 @@ struct InstructionNullOperrand : InstructionOperrand {
     }
 
     bool isEq(shared_ptr<InstructionOperrand> toEq) override {
-        if (auto casted = dynamic_pointer_cast<InstructionNullOperrand>(toEq)) return true;
+        if (dynamic_pointer_cast<InstructionNullOperrand>(toEq)) return true;
+        
         return false;
     }
 };
@@ -166,11 +168,14 @@ struct InstructionIfStatementLoadOperrand : InstructionOperrand {
     }
 };
 
+using ScopeMember = variant<shared_ptr<InstructionOperrand>, FuncDeclaration>;
+using Scope = map<string, ScopeMember>;
+
 class FVM {
     public:
         stack<shared_ptr<InstructionOperrand>> vmStack;
   
-        shared_ptr<InstructionOperrand> run(vector<Instruction> bytecode, map<string, FuncDeclaration> functions = {}, map<string, shared_ptr<InstructionOperrand>> scope = {});
+        shared_ptr<InstructionOperrand> run(vector<Instruction> bytecode, shared_ptr<Scope> scope = make_shared<Scope>(), shared_ptr<Scope> parent = make_shared<Scope>());
         FVM(bool logs);
 
         void push(shared_ptr<InstructionOperrand> operrand);

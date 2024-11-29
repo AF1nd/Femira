@@ -1,3 +1,13 @@
-using 'test/module.fmr'
+a = 1
 
-output sum(1, 2)
+fn foo():
+    if a == 1:
+        if true:
+            return 2
+        end
+    end
+end
+
+a = foo()
+
+output a

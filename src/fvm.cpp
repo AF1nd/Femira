@@ -93,8 +93,14 @@ FVM::FVM(bool logs) {
     this->logs = logs;
 }
 
-shared_ptr<InstructionOperrand> FVM::run(vector<Instruction> bytecode, map<string, FuncDeclaration> functions, map<string, shared_ptr<InstructionOperrand>> scope) {
+shared_ptr<InstructionOperrand> FVM::run(vector<Instruction> bytecode, shared_ptr<Scope> scope, shared_ptr<Scope> parent) {
     if (logs) cout << getBytecodeString(bytecode) << endl;
+
+    if (scope != nullptr && parent != nullptr) {
+        for (pair<string, ScopeMember> member: *parent) {
+            if (scope->find(member.first) == scope->end()) scope->insert(member);
+        }
+    }
 
     for (Instruction code: bytecode) {
         switch (code.code) {
@@ -120,21 +126,10 @@ shared_ptr<InstructionOperrand> FVM::run(vector<Instruction> bytecode, map<strin
                         vector<Instruction> bytecode = statement.bytecode;
                         if (!boolean->operrand) bytecode = statement.elseBytecode;
 
-                        map<string, FuncDeclaration> newFunctions;
-                        map<string, shared_ptr<InstructionOperrand>> newScope;
-
                         if (!bytecode.empty()) {
-                            for (pair<string, shared_ptr<InstructionOperrand>> scopeMember: scope)  {
-                                newScope.insert(scopeMember);
-                            }
+                            shared_ptr<InstructionOperrand> result = run(bytecode, make_shared<Scope>(), scope);
 
-                            for (pair<string, FuncDeclaration> funcDeclar: functions)  {
-                                newFunctions.insert(funcDeclar);
-                            }
-
-                            shared_ptr<InstructionOperrand> result = run(bytecode, newFunctions, newScope);
-
-                            return result != nullptr ? result : make_shared<InstructionNullOperrand>();
+                            if (result != nullptr) return result;
                         }
                     }
                 }
@@ -163,7 +158,7 @@ shared_ptr<InstructionOperrand> FVM::run(vector<Instruction> bytecode, map<strin
                     FuncDeclaration fnDeclr = declr->operrand;
                     string id = fnDeclr.id;
 
-                    functions.insert({id, fnDeclr});
+                    (*scope)[id] = fnDeclr;
                 }
                 break;
             case F_CALL:
@@ -178,7 +173,7 @@ shared_ptr<InstructionOperrand> FVM::run(vector<Instruction> bytecode, map<strin
                     FuncDeclaration funcDeclar;
 
                     try {
-                        funcDeclar = functions.at(funcName);
+                        funcDeclar = get<FuncDeclaration>(scope->at(funcName));
                     }
                     catch(const exception& e) {
                         throw runtime_error("FVM: FUNCTION " + funcName + " DOESN'T EXIST");
@@ -192,26 +187,16 @@ shared_ptr<InstructionOperrand> FVM::run(vector<Instruction> bytecode, map<strin
                         args.push_back(arg);
                     }
 
-                    map<string, FuncDeclaration> newFunctions;
-                    map<string, shared_ptr<InstructionOperrand>> newScope;
-
-
-                    for (pair<string, shared_ptr<InstructionOperrand>> scopeMember: scope)  {
-                        newScope.insert(scopeMember);
-                    }
-
-                    for (pair<string, FuncDeclaration> funcDeclar: functions)  {
-                        newFunctions.insert(funcDeclar);
-                    }
+                    shared_ptr<Scope> newScope = make_shared<Scope>();
 
                     for (size_t i = 0; i < argsNum; ++i) {
                         shared_ptr<InstructionOperrand> arg = args.at(i);
                         string id = funcDeclar.argsIds.at(i);
                         
-                        newScope.insert({ id, arg });
+                        newScope->insert({ id, arg });
                     }
 
-                    shared_ptr<InstructionOperrand> result = run(funcDeclar.bytecode, newFunctions, newScope);
+                    shared_ptr<InstructionOperrand> result = run(funcDeclar.bytecode, newScope, scope);
 
                     push(result != nullptr ? result : make_shared<InstructionNullOperrand>());
                 }
@@ -221,7 +206,13 @@ shared_ptr<InstructionOperrand> FVM::run(vector<Instruction> bytecode, map<strin
                     auto adr = dynamic_pointer_cast<InstructionStringOperrand>(code.operrand.value());
                     auto val = pop();
 
-                    if (adr) scope.insert({adr->operrand, val});
+                    if (adr) {
+                        if (parent != nullptr && parent->find(adr->operrand) != parent->end()) {
+                            (*parent)[adr->operrand] = val;
+                        }
+
+                        (*scope)[adr->operrand] = val;
+                    }
                     else throw runtime_error("FVM: FOR SETVAR EXPECTED ADDRESS (OPERRAND 1)");
                 }
                 break;
@@ -230,10 +221,10 @@ shared_ptr<InstructionOperrand> FVM::run(vector<Instruction> bytecode, map<strin
                     auto adr = dynamic_pointer_cast<InstructionStringOperrand>(code.operrand.value());
                     if (adr) {
                         try {
-                            auto val = scope.at(adr->operrand);
-                            if (val) push(val);
+                            ScopeMember val = scope->at(adr->operrand);
+                            push(get<shared_ptr<InstructionOperrand>>(val));
                         }
-                        catch(const exception& e) {
+                        catch (const exception& e) {
                             throw runtime_error("FVM: BY ADDRESS " + adr->operrand + " NOT FINDED ANYTHING");
                         }
                         
