@@ -3,7 +3,7 @@
 
 #include "include/compiler.h"
 #include "lexer/include/lexer.h"
-#include "parser/parser.h"
+#include "include/parser.h"
 #include "include/bytecodeGenerator.h"
 #include "../include/fvm.h"
 

@@ -6,7 +6,7 @@
 #include <string>
 
 #include "lexer/include/lexer.h"
-#include "parser/parser.h"
+#include "include/parser.h"
 #include "../include/fvm.h"
 #include "include/bytecodeGenerator.h"
 #include "include/compiler.h"
