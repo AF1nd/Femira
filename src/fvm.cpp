@@ -1,9 +1,10 @@
 #include <iostream>
 #include <stack>
 #include <vector>
-#include <unistd.h>
 #include <algorithm>
 #include <string>
+#include <chrono>
+#include <thread>
 
 #include "include/fvm.h"
 
@@ -139,7 +140,7 @@ shared_ptr<InstructionOperrand> FVM::run(vector<Instruction> bytecode, shared_pt
                     auto val = dynamic_pointer_cast<InstructionNumberOperrand>(pop());
                     if (!val) throw runtime_error("FVM: DELAY ERROR, NO NUMBER IN STACK");
 
-                    usleep(val->operrand * 1000000);
+                    this_thread::sleep_for(chrono::duration<double>(val->operrand));
                 }
                 break;
             case F_RETURN:
