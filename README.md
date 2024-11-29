@@ -29,3 +29,9 @@ else:
    ..code
 end
 ```
+
+## Run program:
+
+path/to/interpreter-file (femic.exe/femic.out) path/to/program.fmr:
+
+folder/femic.out main.fmr
