@@ -4,8 +4,8 @@
 #include <iostream>
 #include <vector>
 
-#include "./parser/parser.h"
-#include "../fvm/fvm.h"
+#include "../parser/parser.h"
+#include "../../include/fvm.h"
 
 using namespace std;
 

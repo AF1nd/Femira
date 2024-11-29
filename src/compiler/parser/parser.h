@@ -2,7 +2,7 @@
 #define PARSER_H
 
 #include <vector>
-#include "../lexer/token.h"
+#include "../lexer/include/token.h"
 #include <map>
 
 using namespace std;

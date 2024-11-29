@@ -1,7 +1,7 @@
 #include <iostream>
 #include "parser.h"
-#include "../lexer/token.h"
-#include "../lexer/lexer.h"
+#include "../lexer/include/token.h"
+#include "../lexer/include/lexer.h"
 #include <vector>
 #include <algorithm>
 

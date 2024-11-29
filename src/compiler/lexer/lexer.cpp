@@ -1,8 +1,9 @@
 #include <iostream>
-#include "token.h"
-#include "lexer.h"
 #include <vector>
 #include <regex>
+
+#include "include/token.h"
+#include "include/lexer.h"
 
 using namespace std;
 

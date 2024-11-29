@@ -5,11 +5,11 @@
 #include <fstream> 
 #include <string>
 
-#include "./lexer/lexer.h"
-#include "./parser/parser.h"
-#include "../fvm/fvm.h"
-#include "bytecodeGenerator.h"
-#include "compiler.h"
+#include "lexer/include/lexer.h"
+#include "parser/parser.h"
+#include "../include/fvm.h"
+#include "include/bytecodeGenerator.h"
+#include "include/compiler.h"
 
 string readFile(string path) {
     ifstream file(path);

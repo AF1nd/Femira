@@ -1,11 +1,11 @@
 #include <iostream>
 #include <fstream>
 
-#include "compiler.h"
-#include "lexer/lexer.h"
+#include "include/compiler.h"
+#include "lexer/include/lexer.h"
 #include "parser/parser.h"
-#include "bytecodeGenerator.h"
-#include "../fvm/fvm.h"
+#include "include/bytecodeGenerator.h"
+#include "../include/fvm.h"
 
 using namespace std;
 

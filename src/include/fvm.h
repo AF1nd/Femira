@@ -4,7 +4,6 @@
 #include <iostream>
 #include <stack>
 #include <vector>
-#include <variant>
 #include <any>
 #include <memory>
 #include <optional>
@@ -118,13 +117,7 @@ struct InstructionBoolOperrand : InstructionOperrand {
 
 struct Instruction {
     optional<shared_ptr<InstructionOperrand>> operrand;
-    optional<shared_ptr<InstructionOperrand>> operrand2;
     Bytecode code;
-
-    Instruction(Bytecode code, 
-        optional<shared_ptr<InstructionOperrand>> operrand, 
-        optional<shared_ptr<InstructionOperrand>> operrand2
-    ) { this->code = code; this->operrand = operrand; this->operrand2 = operrand2; };
 
     Instruction(Bytecode code, 
         optional<shared_ptr<InstructionOperrand>> operrand

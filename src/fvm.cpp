@@ -1,13 +1,11 @@
 #include <iostream>
 #include <stack>
 #include <vector>
-#include <variant>
-#include <any>
 #include <unistd.h>
 #include <algorithm>
 #include <string>
 
-#include "fvm.h"
+#include "include/fvm.h"
 
 using namespace std;
 
@@ -385,10 +383,6 @@ string FVM::getBytecodeString(vector<Instruction> bytecode) {
 
         if (code.operrand.has_value()) {
             opStr = code.operrand.value()->tostring();
-        }
-
-        if (code.operrand2.has_value()) {
-            opStr2 = code.operrand2.value()->tostring();
         }
 
         string opcodeName = opcodeToString(code.code);

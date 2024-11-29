@@ -2,11 +2,7 @@
 #include <vector>
 #include <string.h>
 
-#include "compiler/lexer/lexer.h"
-#include "compiler/parser/parser.h"
-#include "compiler/bytecodeGenerator.h"
-#include "fvm/fvm.h"
-#include "runner.h"
+#include "include/runner.h"
 
 using namespace std;
 

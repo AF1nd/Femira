@@ -1,8 +1,8 @@
 #include <iostream>
 #include <fstream>
 
-#include "runner.h"
-#include "compiler/compiler.h"
+#include "include/runner.h"
+#include "compiler/include/compiler.h"
 
 using namespace std;
 
