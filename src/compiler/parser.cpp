@@ -179,7 +179,7 @@ IfStatementNode* Parser::parseIfStatement() {
     if (!condition) throw runtime_error("Syntax error, after if needs condition");
     
     BlockNode* block = parseBlock();
-    BlockNode* elseBlock;
+    BlockNode* elseBlock = nullptr;
 
     if (match({ ELSE })) {
         eat({ ELSE });
@@ -253,6 +253,8 @@ BlockNode* Parser::parseBlock() {
 AstNode* Parser::parseBinaryOperation(AstNode* left) {
     while (match({ LBRACKET })) eat({ LBRACKET });
 
+    bool isParsed = false;
+
     while (true) {
         if (match({ PLUS, MINUS })) {
             BinaryOperationNode* bin = new BinaryOperationNode();
@@ -262,12 +264,16 @@ AstNode* Parser::parseBinaryOperation(AstNode* left) {
 
             left = bin;
 
+            isParsed = true;
+
             while (match({ RBRACKET })) eat({ RBRACKET });
 
             continue;
         }
         break;
     }
+
+    if (!isParsed) left = prioritable(left);
     
     return left;
 };

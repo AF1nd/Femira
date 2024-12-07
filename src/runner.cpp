@@ -25,5 +25,8 @@ void Runner::run(string path) {
     Compiler compiler;
 
     FVM fvm(false);
-    fvm.run(compiler.compile(read(path)));
+
+    auto compiled = compiler.compile(read(path));
+
+    fvm.run(compiled);
 }

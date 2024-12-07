@@ -2,11 +2,17 @@
 a := null
 
 fn assign():
-    a := 2 + 5 * 5 + 2
+    if a == null:
+        a := 2 + 5 * 5 + 2
+    end
+    else:
+        output 'already assigned'
+    end
 end
 
 output a
 
+assign()
 assign()
 
 output a
