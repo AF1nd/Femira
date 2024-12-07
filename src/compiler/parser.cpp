@@ -21,10 +21,11 @@ Parser::Parser(vector<Token> tokens) {
     binaryOperationsTokens = {
         MUL,
         DIV,
-
         PLUS, 
         MINUS,
+    };
 
+    conditionTokens = {
         EQ, 
         NOTEQ, 
         BIGGER, 
@@ -33,19 +34,6 @@ Parser::Parser(vector<Token> tokens) {
         SMALLER_OR_EQ,
         AND,
         OR
-    };
-
-    prioritableBinOpTokens = {
-        DIV,
-        MUL,
-        EQ, 
-        NOTEQ, 
-        BIGGER, 
-        SMALLER, 
-        BIGGER_OR_EQ, 
-        SMALLER_OR_EQ,
-        AND,
-        OR,
     };
 
     literalTokens = {
@@ -152,7 +140,23 @@ AstNode* Parser::parseExpression(bool onlyAtom, bool noParenthisized) {
         if (match(binaryOperationsTokens) && !onlyAtom) {
             node = parseBinaryOperation(node);
         }
+        if (match(conditionTokens)) {
+            node = parseCondition(node);
+        }
     }
+
+    return node;
+}
+
+ConditionNode* Parser::parseCondition(AstNode* left) {
+    Token operatorToken = eat(conditionTokens);
+
+    AstNode* right = parseExpression();
+
+    ConditionNode* node = new ConditionNode();
+    node->left = left;
+    node->right = right;
+    node->operatorToken = operatorToken;
 
     return node;
 }
@@ -285,10 +289,10 @@ AstNode* Parser::prioritable(AstNode* receivedLeft) {
     if (!left) left = parseExpression(true, true);
 
     while (true) {
-        if (match(prioritableBinOpTokens)) {
+        if (match({ MUL, DIV })) {
             BinaryOperationNode* bin = new BinaryOperationNode();
             bin->left = left;
-            bin->operatorToken = eat(prioritableBinOpTokens);
+            bin->operatorToken = eat({ MUL, DIV });
             bin->right = parseExpression(true, true);
 
             left = bin;

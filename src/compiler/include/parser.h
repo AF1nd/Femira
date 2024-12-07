@@ -64,11 +64,23 @@ struct BinaryOperationNode : AstNode {
     AstNode* left;
     AstNode* right;
     Token operatorToken;
-    int priority;
+
     BinaryOperationNode() = default;
 
     string tostr() override {
-        return "[ binary: "  + left->tostr() + " " + operatorToken.getValue() + " " + right->tostr() + + " | " + to_string(priority) + " ]";
+        return "[ binary: "  + left->tostr() + " " + operatorToken.getValue() + " " + right->tostr() + " ]";
+    }
+};
+
+struct ConditionNode : AstNode {
+    AstNode* left;
+    AstNode* right;
+    Token operatorToken;
+
+    ConditionNode() = default;
+
+    string tostr() override {
+        return "[ condition: "  + left->tostr() + " " + operatorToken.getValue() + " " + right->tostr() + " ]";
     }
 };
 
@@ -141,8 +153,8 @@ class Parser {
 
         vector<TokenType> unaryOperationsTokens;
         vector<TokenType> binaryOperationsTokens;
-        vector<TokenType> prioritableBinOpTokens;
         vector<TokenType> literalTokens;
+        vector<TokenType> conditionTokens;
     public: 
         Parser(vector<Token> tokens);
         BlockNode* parse();
@@ -162,6 +174,8 @@ class Parser {
 
         AstNode* prioritable(AstNode* left = nullptr);
         AstNode* parseBinaryOperation(AstNode* left);
+
+        ConditionNode* parseCondition(AstNode* left);
 
         FnDefineNode* parseFunctionDefinition();
         CallNode* parseCall(AstNode* calling);

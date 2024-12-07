@@ -15,6 +15,8 @@ vector<Instruction> Compiler::compile(string code) {
 
     BlockNode* ast = parser.parse();
 
+    for (auto v: ast->nodes) cout << v->tostr() << endl;
+
     vector<Instruction> bytecode = BytecodeGenerator(ast).generate();
 
     return bytecode;
