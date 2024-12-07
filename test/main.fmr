@@ -1,15 +1,12 @@
-a = 1
 
-fn foo():
-    if a == 1:
-        a = a + 1
-    end
-    else:
-        output '"a" already changed'
-    end
+a := null
+
+fn assign():
+    a := 2 + 5 * 5 + 2
 end
 
-foo()
-foo()
+output a
+
+assign()
 
 output a

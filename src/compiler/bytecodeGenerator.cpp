@@ -40,16 +40,6 @@ void BytecodeGenerator::visitNode(AstNode* node) {
             Token operatorToken = binary->operatorToken;
             TokenType operatorType = operatorToken.getType();
 
-            if (operatorType == ASSIGN) {
-                AstNode* left = binary->left;
-                if (IdentifierNode* identifier = dynamic_cast<IdentifierNode*>(left)) {
-                    visitNode(binary->right);
-                    
-                    bytecode.push_back(Instruction(Bytecode(F_LOADK), make_shared<InstructionStringOperrand>(identifier->token.getValue())));
-                    return;
-                } else throw runtime_error("Compile error! Left operrand of assign operration must be a identifier");
-            }
-
             visitNode(binary->left);
             visitNode(binary->right);
 
@@ -71,6 +61,10 @@ void BytecodeGenerator::visitNode(AstNode* node) {
             else if (operatorType == OR) instr = Instruction(Bytecode(F_OR));
 
             bytecode.push_back(instr);
+        } else if (AssignmentNode* assignment = dynamic_cast<AssignmentNode*>(node)) {
+            IdentifierNode* id = assignment->id;
+            visitNode(assignment->value);
+            bytecode.push_back(Instruction(Bytecode(F_LOADK), make_shared<InstructionStringOperrand>(id->token.getValue())));
         } else if (LiteralNode* literal = dynamic_cast<LiteralNode*>(node)) {
             Token token = literal->token;
             TokenType literalType = token.getType();

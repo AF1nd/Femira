@@ -100,6 +100,15 @@ struct ParenthisizedNode : AstNode {
     };
 };
 
+struct AssignmentNode : AstNode {
+    IdentifierNode* id;
+    AstNode* value;
+
+    string tostr() override {
+        return "[ assign: " + id->tostr() + " | " + value->tostr() + " ]";
+    };
+};
+
 struct FnDefineNode : AstNode {
     IdentifierNode* id;
     ArgsNode* args;
@@ -132,9 +141,8 @@ class Parser {
 
         vector<TokenType> unaryOperationsTokens;
         vector<TokenType> binaryOperationsTokens;
+        vector<TokenType> prioritableBinOpTokens;
         vector<TokenType> literalTokens;
-
-        map<TokenType, int> operatorPriorities;
     public: 
         Parser(vector<Token> tokens);
         BlockNode* parse();
@@ -143,19 +151,24 @@ class Parser {
         bool lookMatch(vector<TokenType> tokenTypes, int offset);
         Token eat(vector<TokenType> tokenTypes);
         
-        AstNode* parseExpression(bool isParenthisized = false);
+        AstNode* parseExpression(bool onlyAtom = false, bool noParenthisized = false);
         
         IdentifierNode* parseIdentifier();
 
         IfStatementNode* parseIfStatement();
-        ParenthisizedNode* parseParenthisized();
+        ParenthisizedNode* parseParenthisized(bool onlyAtom = false, bool noParenthisized = false);
         LiteralNode* parseLiteral();
         BlockNode* parseBlock();
-        BinaryOperationNode* parseBinaryOperation(AstNode* left, bool isParenthisized);
+
+        AstNode* prioritable(AstNode* left = nullptr);
+        AstNode* parseBinaryOperation(AstNode* left);
+
         FnDefineNode* parseFunctionDefinition();
         CallNode* parseCall(AstNode* calling);
         ArgsNode* parseArgs();
         UnaryOperationNode* parseUnaryOperation();
+
+        AssignmentNode* parseAssignment();
 };
 
 #endif

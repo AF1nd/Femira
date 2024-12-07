@@ -21,17 +21,31 @@ Parser::Parser(vector<Token> tokens) {
     binaryOperationsTokens = {
         MUL,
         DIV,
+
         PLUS, 
-        MINUS, 
+        MINUS,
+
         EQ, 
         NOTEQ, 
         BIGGER, 
         SMALLER, 
         BIGGER_OR_EQ, 
         SMALLER_OR_EQ,
-        ASSIGN,
         AND,
         OR
+    };
+
+    prioritableBinOpTokens = {
+        DIV,
+        MUL,
+        EQ, 
+        NOTEQ, 
+        BIGGER, 
+        SMALLER, 
+        BIGGER_OR_EQ, 
+        SMALLER_OR_EQ,
+        AND,
+        OR,
     };
 
     literalTokens = {
@@ -40,14 +54,6 @@ Parser::Parser(vector<Token> tokens) {
         NULLT,
         TRUE,
         FALSE
-    };
-
-    operatorPriorities = {
-        { MUL, 2 },
-        { DIV, 2 },
-        { PLUS, 1 },
-        { MINUS, 1 },
-        { AND, 5 }
     };
 }
 
@@ -116,13 +122,15 @@ BlockNode* Parser::parse() {
     return block;
 }
 
-AstNode* Parser::parseExpression(bool isParenthisized) {
+AstNode* Parser::parseExpression(bool onlyAtom, bool noParenthisized) {
     AstNode* node = nullptr;
 
     if (match({ DEF })) node = parseFunctionDefinition();
     if (match({ ID }) && !node) {
-        node = parseIdentifier();
-    };
+        if (lookMatch({ ASSIGN }, 1)) node = parseAssignment();
+
+        if (!node) node = parseIdentifier();
+    }; 
     if (match(literalTokens) && !node) {
         node = parseLiteral();
     };
@@ -130,14 +138,35 @@ AstNode* Parser::parseExpression(bool isParenthisized) {
         node = parseUnaryOperation();
     };
     if (match({ IF })) node = parseIfStatement();
-    if (match({ LBRACKET }) && !node) node = parseParenthisized();
+    if (match({ LBRACKET }) && !node) {
+        if (!noParenthisized) node = parseParenthisized(onlyAtom, noParenthisized);
+        else {
+            _position++;
+            node = parseExpression();
+            if (match({RBRACKET})) _position++;
+        }
+    }
 
     if (node) {
         if (match({ LBRACKET })) node = parseCall(node);
-        if (match(binaryOperationsTokens)) {
-            node = parseBinaryOperation(node, isParenthisized);
+        if (match(binaryOperationsTokens) && !onlyAtom) {
+            node = parseBinaryOperation(node);
         }
     }
+
+    return node;
+}
+
+AssignmentNode* Parser::parseAssignment() {
+    IdentifierNode* id = parseIdentifier();
+
+    eat({ ASSIGN });
+
+    AstNode* expr = parseExpression();
+
+    AssignmentNode* node = new AssignmentNode();
+    node->id = id;
+    node->value = expr;
 
     return node;
 }
@@ -148,7 +177,7 @@ IfStatementNode* Parser::parseIfStatement() {
     AstNode* condition = parseExpression();
 
     if (!condition) throw runtime_error("Syntax error, after if needs condition");
-
+    
     BlockNode* block = parseBlock();
     BlockNode* elseBlock;
 
@@ -166,10 +195,10 @@ IfStatementNode* Parser::parseIfStatement() {
     return statement;
 }
 
-ParenthisizedNode* Parser::parseParenthisized() {
+ParenthisizedNode* Parser::parseParenthisized(bool onlyAtom, bool noParenthisized)  {
     eat({ LBRACKET });
 
-    AstNode* expr = parseExpression(true);
+    AstNode* expr = parseExpression(onlyAtom, noParenthisized);
 
     ParenthisizedNode* node = new ParenthisizedNode();
     node->wrapped = expr;
@@ -221,29 +250,53 @@ BlockNode* Parser::parseBlock() {
     return block;
 };
 
-BinaryOperationNode* Parser::parseBinaryOperation(AstNode* left, bool isParenthisized) {
-    Token operatorToken = eat(binaryOperationsTokens);
+AstNode* Parser::parseBinaryOperation(AstNode* left) {
+    while (match({ LBRACKET })) eat({ LBRACKET });
 
-    AstNode* right = parseExpression();
+    while (true) {
+        if (match({ PLUS, MINUS })) {
+            BinaryOperationNode* bin = new BinaryOperationNode();
+            bin->left = left;
+            bin->operatorToken = eat({ PLUS, MINUS });
+            bin->right = prioritable();
 
-    int priority = 1;
-    if (operatorPriorities.find(operatorToken.getType()) != operatorPriorities.end()) {
-        priority = operatorPriorities.at(operatorToken.getType());
+            left = bin;
+
+            while (match({ RBRACKET })) eat({ RBRACKET });
+
+            continue;
+        }
+        break;
     }
-
-    BinaryOperationNode* node = new BinaryOperationNode();
     
-    node->left = left;
-    node->operatorToken = operatorToken;
-    node->right = right;
-    node->priority = priority;
+    return left;
+};
 
-    if (isParenthisized) {
-        node->priority++;
+AstNode* Parser::prioritable(AstNode* receivedLeft) {
+    while (match({ LBRACKET })) eat({ LBRACKET });
+
+    AstNode* left = receivedLeft;
+    if (!left) left = parseExpression(true, true);
+
+    while (true) {
+        if (match(prioritableBinOpTokens)) {
+            BinaryOperationNode* bin = new BinaryOperationNode();
+            bin->left = left;
+            bin->operatorToken = eat(prioritableBinOpTokens);
+            bin->right = parseExpression(true, true);
+
+            left = bin;
+
+            while (match({ RBRACKET })) eat({ RBRACKET });
+
+            continue;
+        }
+
+        break;
     }
 
-    return node;
-};
+    return left;
+}
 
 CallNode* Parser::parseCall(AstNode* calling) {
     ArgsNode* args = parseArgs();

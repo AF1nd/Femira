@@ -122,7 +122,7 @@ Lexer::Lexer(string code) {
         make_pair(">=", BIGGER_OR_EQ),
         make_pair("<=", SMALLER_OR_EQ),
 
-        make_pair("=", ASSIGN),
+        make_pair(":=", ASSIGN),
  
         make_pair(">", BIGGER),
         make_pair("<", SMALLER),
