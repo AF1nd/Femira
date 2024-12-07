@@ -150,7 +150,7 @@ IfStatementNode* Parser::parseIfStatement() {
     if (!condition) throw runtime_error("Syntax error, after if needs condition");
 
     BlockNode* block = parseBlock();
-    BlockNode* elseBlock = nullptr;
+    BlockNode* elseBlock;
 
     if (match({ ELSE })) {
         eat({ ELSE });

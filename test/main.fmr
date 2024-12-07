@@ -5,7 +5,7 @@ fn foo():
         a = a + 1
     end
     else:
-        output '"a" already changed"'
+        output '"a" already changed'
     end
 end
 
