@@ -3,7 +3,9 @@ a := null
 
 fn assign():
     if a == null:
-        a := 2 + 5 * 5 + 2
+        if true:
+            a := 2 + 5 * 5 + 2
+        end
     end
     else:
         output 'already assigned'
