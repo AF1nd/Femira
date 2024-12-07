@@ -2,14 +2,14 @@ a = 1
 
 fn foo():
     if a == 1:
-        if true:
-            return 2
-        end
+        a = a + 1
+    end
+    else:
+        output '"a" already changed"'
     end
 end
 
-a = foo()
-
-delay 2
+foo()
+foo()
 
 output a

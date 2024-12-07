@@ -15,11 +15,11 @@ string opcodeToString(Bytecode opcode) {
         case F_PUSH:
             return "PUSH";
             break;
-        case F_SETVAR:
-            return "SETVAR";
+        case F_LOADK:
+            return "LOADK";
             break;
-        case F_GETVAR:
-            return "GETVAR";
+        case F_GETK:
+            return "GETK";
             break;
         case F_LOADFUNC:
             return "LOADFUNC";
@@ -128,7 +128,17 @@ shared_ptr<InstructionOperrand> FVM::run(vector<Instruction> bytecode, shared_pt
                         if (!boolean->operrand) bytecode = statement.elseBytecode;
 
                         if (!bytecode.empty()) {
-                            shared_ptr<InstructionOperrand> result = run(bytecode, make_shared<Scope>(), scope);
+                            shared_ptr<Scope> newScope = make_shared<Scope>();
+
+                            shared_ptr<InstructionOperrand> result = run(bytecode, newScope, scope);
+
+                            for (pair<string, ScopeMember> member: *newScope) {
+                                ScopeMember realMember = member.second;
+                                
+                                if (scope->find(member.first) != scope->end()) {
+                                    (*scope)[member.first] = realMember;
+                                }
+                            }
 
                             if (result != nullptr) return result;
                         }
@@ -199,25 +209,29 @@ shared_ptr<InstructionOperrand> FVM::run(vector<Instruction> bytecode, shared_pt
 
                     shared_ptr<InstructionOperrand> result = run(funcDeclar.bytecode, newScope, scope);
 
+                    for (pair<string, ScopeMember> member: *newScope) {
+                        ScopeMember realMember = member.second;
+                        
+                        if (scope->find(member.first) != scope->end()) {
+                            (*scope)[member.first] = realMember;
+                        }
+                    }
+
                     push(result != nullptr ? result : make_shared<InstructionNullOperrand>());
                 }
                 break;
-            case F_SETVAR:
+            case F_LOADK:
                 {
                     auto adr = dynamic_pointer_cast<InstructionStringOperrand>(code.operrand.value());
                     auto val = pop();
 
                     if (adr) {
-                        if (parent != nullptr && parent->find(adr->operrand) != parent->end()) {
-                            (*parent)[adr->operrand] = val;
-                        }
-
                         (*scope)[adr->operrand] = val;
                     }
                     else throw runtime_error("FVM: FOR SETVAR EXPECTED ADDRESS (OPERRAND 1)");
                 }
                 break;
-            case F_GETVAR:
+            case F_GETK:
                 {
                     auto adr = dynamic_pointer_cast<InstructionStringOperrand>(code.operrand.value());
                     if (adr) {

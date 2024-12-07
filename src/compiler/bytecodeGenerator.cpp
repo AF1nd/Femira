@@ -45,7 +45,7 @@ void BytecodeGenerator::visitNode(AstNode* node) {
                 if (IdentifierNode* identifier = dynamic_cast<IdentifierNode*>(left)) {
                     visitNode(binary->right);
                     
-                    bytecode.push_back(Instruction(Bytecode(F_SETVAR), make_shared<InstructionStringOperrand>(identifier->token.getValue())));
+                    bytecode.push_back(Instruction(Bytecode(F_LOADK), make_shared<InstructionStringOperrand>(identifier->token.getValue())));
                     return;
                 } else throw runtime_error("Compile error! Left operrand of assign operration must be a identifier");
             }
@@ -136,7 +136,7 @@ void BytecodeGenerator::visitNode(AstNode* node) {
             else if (unaryType == DELAY) bytecode.push_back(Instruction(Bytecode(F_DELAY)));
             else if (unaryType == OUTPUT) bytecode.push_back(Instruction(Bytecode(F_OUTPUT)));
         } else if (IdentifierNode* identifier = dynamic_cast<IdentifierNode*>(node)) {
-            bytecode.push_back(Instruction(Bytecode(F_GETVAR), make_shared<InstructionStringOperrand>(identifier->token.getValue())));
+            bytecode.push_back(Instruction(Bytecode(F_GETK), make_shared<InstructionStringOperrand>(identifier->token.getValue())));
         } else if (ParenthisizedNode* parenthisized = dynamic_cast<ParenthisizedNode*>(node)) {
             visitNode(parenthisized->wrapped);
         } else if (FnDefineNode* fnDefine = dynamic_cast<FnDefineNode*>(node)) {
