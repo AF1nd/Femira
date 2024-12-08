@@ -125,7 +125,7 @@ AstNode* Parser::parseExpression(bool onlyAtom, bool noParenthisized) {
     if (match(unaryOperationsTokens) && !node) {
         node = parseUnaryOperation();
     };
-    if (match({ IF })) node = parseIfStatement();
+    if (match({ IF }) && !node) node = parseIfStatement();
     if (match({ LBRACKET }) && !node) {
         if (!noParenthisized) node = parseParenthisized(onlyAtom, noParenthisized);
         else {
@@ -255,7 +255,11 @@ BlockNode* Parser::parseBlock() {
 };
 
 AstNode* Parser::parseBinaryOperation(AstNode* left) {
-    while (match({ LBRACKET })) eat({ LBRACKET });
+    int lbrackets = 0;
+    while (match({ LBRACKET })) {
+        eat({ LBRACKET });
+        lbrackets++;
+    }
 
     bool isParsed = false;
 
@@ -270,7 +274,10 @@ AstNode* Parser::parseBinaryOperation(AstNode* left) {
 
             isParsed = true;
 
-            while (match({ RBRACKET })) eat({ RBRACKET });
+            while (lbrackets > 0) {
+                eat({ RBRACKET });
+                lbrackets--;
+            }
 
             continue;
         }
@@ -283,7 +290,11 @@ AstNode* Parser::parseBinaryOperation(AstNode* left) {
 };
 
 AstNode* Parser::prioritable(AstNode* receivedLeft) {
-    while (match({ LBRACKET })) eat({ LBRACKET });
+    int lbrackets = 0;
+    while (match({ LBRACKET })) {
+        eat({ LBRACKET });
+        lbrackets++;
+    }
 
     AstNode* left = receivedLeft;
     if (!left) left = parseExpression(true, true);
@@ -297,7 +308,10 @@ AstNode* Parser::prioritable(AstNode* receivedLeft) {
 
             left = bin;
 
-            while (match({ RBRACKET })) eat({ RBRACKET });
+            while (lbrackets > 0) {
+                eat({ RBRACKET });
+                lbrackets--;
+            }
 
             continue;
         }

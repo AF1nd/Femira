@@ -130,10 +130,14 @@ struct Instruction {
     Instruction() = default;
 };
 
+struct Scope;
+
 struct FuncDeclaration {
     vector<Instruction> bytecode;
     vector<string> argsIds;
     string id;
+
+    shared_ptr<Scope> scope;
 
     FuncDeclaration(vector<Instruction> bytecode, vector<string> argsIds, string id) { this->bytecode = bytecode; this->argsIds = argsIds, this->id = id; };
     FuncDeclaration() = default;
@@ -169,7 +173,9 @@ struct InstructionIfStatementLoadOperrand : InstructionOperrand {
 };
 
 using ScopeMember = variant<shared_ptr<InstructionOperrand>, FuncDeclaration>;
-using Scope = map<string, ScopeMember>;
+struct Scope {
+    map<string, ScopeMember> members;
+};
 
 class FVM {
     public:
