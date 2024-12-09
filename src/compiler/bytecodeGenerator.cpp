@@ -176,6 +176,17 @@ void BytecodeGenerator::visitNode(AstNode* node) {
 
 vector<Instruction> BytecodeGenerator::generate() {
     visitNode(root);
+
+    bool isReturnExist = false;
+
+    for (Instruction instr: bytecode) {
+        if (instr.code == F_RETURN) {
+            isReturnExist = true;
+            break;
+        }
+    }
+
+    if (!isReturnExist) bytecode.push_back(Instruction(Bytecode(F_RETURN)));
     
     return bytecode;
 }

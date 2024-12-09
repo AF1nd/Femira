@@ -94,7 +94,7 @@ FVM::FVM(bool logs) {
     this->logs = logs;
 }
 
-shared_ptr<InstructionOperrand> FVM::run(vector<Instruction> bytecode, shared_ptr<Scope> scope, shared_ptr<Scope> parent) {
+void FVM::run(vector<Instruction> bytecode, shared_ptr<Scope> scope, shared_ptr<Scope> parent) {
     if (logs) cout << getBytecodeString(bytecode) << endl;
 
     if (scope != nullptr && parent != nullptr) {
@@ -130,17 +130,7 @@ shared_ptr<InstructionOperrand> FVM::run(vector<Instruction> bytecode, shared_pt
                         if (!bytecode.empty()) {
                             shared_ptr<Scope> newScope = make_shared<Scope>();
 
-                            shared_ptr<InstructionOperrand> result = run(bytecode, newScope, scope);
-
-                            for (pair<string, ScopeMember> member: newScope->members) {
-                                ScopeMember realMember = member.second;
-                                
-                                if (scope->members.find(member.first) != scope->members.end()) {
-                                    scope->members[member.first] = realMember;
-                                }
-                            }
-
-                            if (result != nullptr) return result;
+                            run(bytecode, newScope, scope);
                         }
                     }
                 }
@@ -156,9 +146,15 @@ shared_ptr<InstructionOperrand> FVM::run(vector<Instruction> bytecode, shared_pt
             case F_RETURN:
                 {
                     shared_ptr<InstructionNullOperrand> val = make_shared<InstructionNullOperrand>();
-                    if (vmStack.empty()) return val;
-                    
-                    return pop();
+                    if (vmStack.empty()) push(val);
+
+                    for (auto v: scope->members) {
+                        if (parent != nullptr && parent->members.find(v.first) != parent->members.end()) {
+                            parent->members[v.first] = v.second;
+                        }
+                    }
+
+                    return;
                 }
                 break;
             case F_LOADFUNC:
@@ -209,9 +205,7 @@ shared_ptr<InstructionOperrand> FVM::run(vector<Instruction> bytecode, shared_pt
                         newScope->members.insert({ id, arg });
                     }
 
-                    shared_ptr<InstructionOperrand> result = run(funcDeclar.bytecode, newScope, funcDeclar.scope);
-
-                    push(result != nullptr ? result : make_shared<InstructionNullOperrand>());
+                    run(funcDeclar.bytecode, newScope, funcDeclar.scope);
                 }
                 break;
             case F_LOADK:
@@ -359,7 +353,11 @@ shared_ptr<InstructionOperrand> FVM::run(vector<Instruction> bytecode, shared_pt
         }
     }
 
-    return 0;
+    for (auto v: scope->members) {
+        if (parent != nullptr && parent->members.find(v.first) != parent->members.end()) {
+            parent->members[v.first] = v.second;
+        }
+    }
 }
 
 void FVM::push(shared_ptr<InstructionOperrand> operrand) {

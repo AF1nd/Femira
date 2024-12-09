@@ -181,7 +181,7 @@ class FVM {
     public:
         stack<shared_ptr<InstructionOperrand>> vmStack;
   
-        shared_ptr<InstructionOperrand> run(vector<Instruction> bytecode, shared_ptr<Scope> scope = make_shared<Scope>(), shared_ptr<Scope> parent = make_shared<Scope>());
+        void run(vector<Instruction> bytecode, shared_ptr<Scope> scope = make_shared<Scope>(), shared_ptr<Scope> parent = make_shared<Scope>());
         FVM(bool logs);
 
         void push(shared_ptr<InstructionOperrand> operrand);
