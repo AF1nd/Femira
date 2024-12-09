@@ -17,6 +17,10 @@ enum TokenType {
     WHITESPACE, 
     LBRACKET, 
     RBRACKET, 
+
+    LSQUARE_BRACKET,
+    RSQUARE_BRACKET,
+    
     COMMA, 
     DOT, 
     NEWLINE, 

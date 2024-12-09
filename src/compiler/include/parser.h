@@ -113,7 +113,7 @@ struct ParenthisizedNode : AstNode {
 };
 
 struct AssignmentNode : AstNode {
-    IdentifierNode* id;
+    AstNode* id;
     AstNode* value;
 
     string tostr() override {
@@ -130,6 +130,27 @@ struct FnDefineNode : AstNode {
 
     string tostr() override {
         return "[ func: " + id->tostr() + " | " + args->tostr() + " | " + block->tostr() + " \n]";
+    };
+};
+
+struct ArrayNode : AstNode {
+    vector<AstNode*> elements;
+
+    ArrayNode() = default;
+
+    string tostr() override {
+        return "[ array, elements: " + to_string(elements.size()) + " ]";
+    };
+};
+
+struct IndexationNode : AstNode {
+    AstNode* index;
+    AstNode* where;
+
+    IndexationNode() = default;
+
+    string tostr() override {
+        return "[ indexation: " + index->tostr() + " ]";
     };
 };
 
@@ -181,8 +202,10 @@ class Parser {
         CallNode* parseCall(AstNode* calling);
         ArgsNode* parseArgs();
         UnaryOperationNode* parseUnaryOperation();
+        ArrayNode* parseArray();
+        IndexationNode* parseIndexation(AstNode* where);
 
-        AssignmentNode* parseAssignment();
+        AssignmentNode* parseAssignment(AstNode* left);
 };
 
 #endif

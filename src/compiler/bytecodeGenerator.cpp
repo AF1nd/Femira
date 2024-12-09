@@ -32,6 +32,47 @@ BytecodeGenerator::BytecodeGenerator(BlockNode* root) {
     this->root = root;
 }
 
+map<ArrayNode*, shared_ptr<InstructionArrayOperrand>> arrayLinks;
+
+shared_ptr<InstructionOperrand> getOperrandFromNode(AstNode* node) {
+    if (IdentifierNode* identifier = dynamic_cast<IdentifierNode*>(node)) {
+        return make_shared<InstructionStringOperrand>(identifier->token.getValue());
+    }  else if (LiteralNode* literal = dynamic_cast<LiteralNode*>(node)) {
+        Token token = literal->token;
+        TokenType literalType = token.getType();
+
+        if (literalType == NUMBER) {
+            return make_shared<InstructionNumberOperrand>(stod(token.getValue()));
+        } else if (literalType == STRING) {
+            return make_shared<InstructionStringOperrand>(token.getValue());
+        } else if (literalType == TRUE) {
+            return make_shared<InstructionBoolOperrand>(true);
+        } else if (literalType == FALSE) {
+            return make_shared<InstructionBoolOperrand>(false);
+        } else if (literalType == NULLT) {
+            return make_shared<InstructionNullOperrand>();
+        }
+    } else if (ArrayNode* array = dynamic_cast<ArrayNode*>(node)) {
+        if (arrayLinks.find(array) != arrayLinks.end()) {
+            return arrayLinks.at(array);
+        }
+
+        shared_ptr<vector<shared_ptr<InstructionOperrand>>> elements = make_shared<vector<shared_ptr<InstructionOperrand>>>();
+        
+        for (AstNode* element: array->elements) {
+            elements->push_back(getOperrandFromNode(element));
+        }
+
+        shared_ptr<InstructionArrayOperrand> operrand =  make_shared<InstructionArrayOperrand>(elements);
+
+        arrayLinks.insert({array, operrand});
+
+        return operrand;
+    }
+
+    return nullptr;
+}
+
 void BytecodeGenerator::visitNode(AstNode* node) {
     if (BlockNode* block = dynamic_cast<BlockNode*>(node)) {
         for (AstNode* node: block->nodes) visitNode(node);
@@ -72,24 +113,18 @@ void BytecodeGenerator::visitNode(AstNode* node) {
 
             bytecode.push_back(instr);
         } else if (AssignmentNode* assignment = dynamic_cast<AssignmentNode*>(node)) {
-            IdentifierNode* id = assignment->id;
-            visitNode(assignment->value);
-            bytecode.push_back(Instruction(Bytecode(F_LOADK), make_shared<InstructionStringOperrand>(id->token.getValue())));
-        } else if (LiteralNode* literal = dynamic_cast<LiteralNode*>(node)) {
-            Token token = literal->token;
-            TokenType literalType = token.getType();
-
-            if (literalType == NUMBER) {
-                bytecode.push_back(Instruction(Bytecode(F_PUSH), make_shared<InstructionNumberOperrand>(stod(token.getValue()))));
-            } else if (literalType == STRING) {
-                bytecode.push_back(Instruction(Bytecode(F_PUSH), make_shared<InstructionStringOperrand>(token.getValue())));
-            } else if (literalType == TRUE) {
-                bytecode.push_back(Instruction(Bytecode(F_PUSH), make_shared<InstructionBoolOperrand>(true)));
-            } else if (literalType == FALSE) {
-                bytecode.push_back(Instruction(Bytecode(F_PUSH), make_shared<InstructionBoolOperrand>(false)));
-            } else if (literalType == NULLT) {
-                bytecode.push_back(Instruction(Bytecode(F_PUSH), make_shared<InstructionNullOperrand>()));
+            AstNode* id = assignment->id;
+            if (IdentifierNode* identifier = dynamic_cast<IdentifierNode*>(id)) {
+                visitNode(assignment->value);
+                bytecode.push_back(Instruction(Bytecode(F_SETGLOBAL), make_shared<InstructionStringOperrand>(identifier->token.getValue())));
+            } else if (IndexationNode* indexation = dynamic_cast<IndexationNode*>(id)) {
+                visitNode(indexation->where);
+                visitNode(assignment->value);
+                visitNode(indexation->index);
+                bytecode.push_back(Instruction(Bytecode(F_SETINDEX)));
             }
+        } else if (LiteralNode* literal = dynamic_cast<LiteralNode*>(node)) {
+             bytecode.push_back(Instruction(Bytecode(F_PUSH), getOperrandFromNode(literal)));
         } else if (IfStatementNode* ifStatement = dynamic_cast<IfStatementNode*>(node)) {
             BytecodeGenerator bgen(ifStatement->block);
 
@@ -140,7 +175,7 @@ void BytecodeGenerator::visitNode(AstNode* node) {
             else if (unaryType == DELAY) bytecode.push_back(Instruction(Bytecode(F_DELAY)));
             else if (unaryType == OUTPUT) bytecode.push_back(Instruction(Bytecode(F_OUTPUT)));
         } else if (IdentifierNode* identifier = dynamic_cast<IdentifierNode*>(node)) {
-            bytecode.push_back(Instruction(Bytecode(F_GETK), make_shared<InstructionStringOperrand>(identifier->token.getValue())));
+            bytecode.push_back(Instruction(Bytecode(F_GETGLOBAL), getOperrandFromNode(identifier)));
         } else if (ParenthisizedNode* parenthisized = dynamic_cast<ParenthisizedNode*>(node)) {
             visitNode(parenthisized->wrapped);
         } else if (FnDefineNode* fnDefine = dynamic_cast<FnDefineNode*>(node)) {
@@ -170,6 +205,13 @@ void BytecodeGenerator::visitNode(AstNode* node) {
             else throw runtime_error("Compile error! Unknown object to call");
 
             bytecode.push_back(Instruction(Bytecode(F_CALL), make_shared<InstructionStringOperrand>(fnId)));
+        } else if (ArrayNode* array = dynamic_cast<ArrayNode*>(node)) {
+            bytecode.push_back(Instruction(Bytecode(F_PUSH), getOperrandFromNode(array)));
+        } else if (IndexationNode* indexation = dynamic_cast<IndexationNode*>(node)) {
+            visitNode(indexation->where);
+            visitNode(indexation->index);
+        
+            bytecode.push_back(Instruction(Bytecode(F_INDEXATION)));
         }
     }
 }

@@ -115,9 +115,7 @@ AstNode* Parser::parseExpression(bool onlyAtom, bool noParenthisized) {
 
     if (match({ DEF })) node = parseFunctionDefinition();
     if (match({ ID }) && !node) {
-        if (lookMatch({ ASSIGN }, 1)) node = parseAssignment();
-
-        if (!node) node = parseIdentifier();
+        node = parseIdentifier();
     }; 
     if (match(literalTokens) && !node) {
         node = parseLiteral();
@@ -134,16 +132,40 @@ AstNode* Parser::parseExpression(bool onlyAtom, bool noParenthisized) {
             if (match({RBRACKET})) _position++;
         }
     }
+    if (match({ LSQUARE_BRACKET }) && !node) {
+        node = parseArray();
+    }
 
     if (node) {
         if (match({ LBRACKET })) node = parseCall(node);
         if (match(binaryOperationsTokens) && !onlyAtom) {
             node = parseBinaryOperation(node);
         }
+
+        if (match({ LSQUARE_BRACKET })) {
+            node = parseIndexation(node);
+        }
+        
         if (match(conditionTokens)) {
             node = parseCondition(node);
         }
+
+        if (match({ ASSIGN })) node = parseAssignment(node);
     }
+
+    return node;
+}
+
+IndexationNode* Parser::parseIndexation(AstNode* where) {
+    eat({ LSQUARE_BRACKET });
+
+    AstNode* index = parseExpression();
+
+    eat({ RSQUARE_BRACKET });
+
+    IndexationNode* node = new IndexationNode();
+    node->index = index;
+    node->where = where;
 
     return node;
 }
@@ -161,9 +183,7 @@ ConditionNode* Parser::parseCondition(AstNode* left) {
     return node;
 }
 
-AssignmentNode* Parser::parseAssignment() {
-    IdentifierNode* id = parseIdentifier();
-
+AssignmentNode* Parser::parseAssignment(AstNode* id) {
     eat({ ASSIGN });
 
     AstNode* expr = parseExpression();
@@ -171,6 +191,28 @@ AssignmentNode* Parser::parseAssignment() {
     AssignmentNode* node = new AssignmentNode();
     node->id = id;
     node->value = expr;
+
+    return node;
+}
+
+ArrayNode* Parser::parseArray() {
+    eat({ LSQUARE_BRACKET });
+
+    vector<AstNode*> elements;
+
+    while (!match({ RSQUARE_BRACKET })) {
+        AstNode* expr = parseExpression();
+        if (expr != nullptr) {
+            elements.push_back(expr);
+            if (match({ COMMA })) eat({ COMMA });
+        }
+        else break;
+    }
+
+    eat({ RSQUARE_BRACKET });
+
+    ArrayNode* node = new ArrayNode();
+    node->elements = elements;
 
     return node;
 }

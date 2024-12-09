@@ -27,7 +27,11 @@ string getTokenTypeString(int type) {
         case LBRACKET:
             return "LBRACKET";
         case RBRACKET:
-            return "RBRACKET";
+            return "RBRACKET"; 
+        case LSQUARE_BRACKET:
+            return "LSQUARE_BRACKET";
+        case RSQUARE_BRACKET:
+            return "RSQUARE_BRACKET";
         case COMMA:
             return "COMMA";
         case DOT:
@@ -107,6 +111,9 @@ Lexer::Lexer(string code) {
 
         make_pair("\\(", LBRACKET),
         make_pair("\\)", RBRACKET),
+
+        make_pair("\\[", LSQUARE_BRACKET),
+        make_pair("\\]", RSQUARE_BRACKET),
 
         make_pair(",", COMMA),
         make_pair("\\.", DOT),

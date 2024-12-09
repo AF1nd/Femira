@@ -1,22 +1,14 @@
 
-a := null
+a := [1, 'пуки каки', 3]
 
-fn assign():
-    if a == null:
-        if true:
-            a := 2 + 5 * 5 + 2
-        end
-    end
-    else:
-        output 'already assigned'
-    end
+a[1] := 'kaka'
+
+output a[1]
+
+fn changer(array):
+    array[1] := 'faf'
 end
 
-output a
+changer(a)
 
-assign()
-assign()
-
-output a
-
-output (5 == 5) & (6 == 5)
+output a[1]

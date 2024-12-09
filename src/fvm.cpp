@@ -14,61 +14,46 @@ string opcodeToString(Bytecode opcode) {
     switch (opcode) {
         case F_PUSH:
             return "PUSH";
-            break;
-        case F_LOADK:
-            return "LOADK";
-            break;
-        case F_GETK:
-            return "GETK";
-            break;
+        case F_SETGLOBAL:
+            return "SETGLOBAL";
+        case F_GETGLOBAL:
+            return "GETGLOBAL";
         case F_LOADFUNC:
             return "LOADFUNC";
-            break;
         case F_CALL:
             return "CALL";
-            break;
         case F_RETURN:
             return "RETURN";
-            break;
         case F_DELAY:
             return "DELAY";
-            break;
         case F_OUTPUT:
             return "OUTPUT";
-            break;
          case F_ADD:
             return "ADD";
-            break;
         case F_SUB:
             return "SUB";
-            break;
         case F_MUL:
             return "MUL";
-            break;
         case F_DIV:
             return "DIV";
-            break;
         case F_EQ:
             return "EQ";
-            break;
         case F_NOTEQ:
             return "NOTEQ";
-            break;
         case F_AND:
             return "AND";
-            break;
         case F_BIGGER:
             return "BIGGER";
-            break;
         case F_SMALLER:
             return "SMALLER";
-            break;
         case F_BIGGER_OR_EQ:
             return "BIGGER_OR_EQ";
-            break;
         case F_SMALLER_OR_EQ:
             return "SMALLER_OR_EQ";
-            break;
+        case F_INDEXATION:
+            return "INDEXATION";
+        case F_SETINDEX:
+            return "SETINDEX";
         default:
             break;
     }
@@ -112,6 +97,36 @@ void FVM::run(vector<Instruction> bytecode, shared_ptr<Scope> scope, shared_ptr<
                     if (!hasVal) throw runtime_error("FVM: NO OPERRAND FOR PUSH");
 
                     push(code.operrand.value());
+                }
+                break;
+            case F_INDEXATION:
+                {
+                    shared_ptr<InstructionOperrand> index = pop();
+                    shared_ptr<InstructionOperrand> array = pop();
+
+                    if (auto casted = dynamic_pointer_cast<InstructionArrayOperrand>(array)) {
+                        if (auto indexCasted = dynamic_pointer_cast<InstructionNumberOperrand>(index)) {
+                            shared_ptr<vector<shared_ptr<InstructionOperrand>>> elements = casted->operrand;
+                            if (elements->size() - 1 >= indexCasted->operrand) {
+                                auto val = elements->at(indexCasted->operrand);
+                                push(val);
+                            } else push(make_shared<InstructionNullOperrand>());
+                        }
+                    }
+                }
+                break;
+            case F_SETINDEX:
+                {
+                    shared_ptr<InstructionOperrand> index = pop();
+                    shared_ptr<InstructionOperrand> value = pop();
+                    shared_ptr<InstructionOperrand> array = pop();
+
+                    if (auto casted = dynamic_pointer_cast<InstructionArrayOperrand>(array)) {
+                        if (auto indexCasted = dynamic_pointer_cast<InstructionNumberOperrand>(index)) {
+                            shared_ptr<vector<shared_ptr<InstructionOperrand>>> elements = casted->operrand;
+                            (*elements)[indexCasted->operrand] = value;
+                        }
+                    }
                 }
                 break;
             case F_IF:
@@ -187,7 +202,6 @@ void FVM::run(vector<Instruction> bytecode, shared_ptr<Scope> scope, shared_ptr<
                     catch(const exception& e) {
                         throw runtime_error("FVM: FUNCTION " + funcName + " DOESN'T EXIST");
                     }
-                    
 
                     int argsNum = funcDeclar.argsIds.size();
 
@@ -208,7 +222,7 @@ void FVM::run(vector<Instruction> bytecode, shared_ptr<Scope> scope, shared_ptr<
                     run(funcDeclar.bytecode, newScope, funcDeclar.scope);
                 }
                 break;
-            case F_LOADK:
+            case F_SETGLOBAL:
                 {
                     auto adr = dynamic_pointer_cast<InstructionStringOperrand>(code.operrand.value());
                     auto val = pop();
@@ -219,7 +233,7 @@ void FVM::run(vector<Instruction> bytecode, shared_ptr<Scope> scope, shared_ptr<
                     else throw runtime_error("FVM: FOR SETVAR EXPECTED ADDRESS (OPERRAND 1)");
                 }
                 break;
-            case F_GETK:
+            case F_GETGLOBAL:
                 {
                     auto adr = dynamic_pointer_cast<InstructionStringOperrand>(code.operrand.value());
                     if (adr) {

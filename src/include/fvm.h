@@ -14,8 +14,8 @@ using namespace std;
 
 enum Bytecode {
     F_PUSH,
-    F_LOADK,
-    F_GETK,
+    F_SETGLOBAL,
+    F_GETGLOBAL,
 
     F_LOADFUNC,
     F_LOADIFST,
@@ -44,7 +44,8 @@ enum Bytecode {
     F_AND,
     F_OR,
 
-    
+    F_INDEXATION,
+    F_SETINDEX,
 };
 
 struct InstructionOperrand {
@@ -169,6 +170,22 @@ struct InstructionIfStatementLoadOperrand : InstructionOperrand {
 
     string tostring() const override {
         return "IF_STMNT";
+    }
+};
+
+struct InstructionArrayOperrand : InstructionOperrand {
+    shared_ptr<vector<shared_ptr<InstructionOperrand>>> operrand;
+
+    InstructionArrayOperrand(shared_ptr<vector<shared_ptr<InstructionOperrand>>> operrand) { this->operrand = operrand; };
+    
+    string tostring() const override {
+        string str;
+
+        for (shared_ptr<InstructionOperrand> op: *operrand) {
+            str += op->tostring() + " ";
+        }
+
+        return str;
     }
 };
 
