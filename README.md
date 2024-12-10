@@ -35,7 +35,7 @@ objects:
 
 ```
 obj := {
-   foo := 'aa'
+   foo := 'aa', // (or ;)
    func := fn():
       output 'f'
    end
