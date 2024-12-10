@@ -191,6 +191,22 @@ struct InstructionArrayOperrand : InstructionOperrand {
     }
 };
 
+struct InstructionObjectOperrand : InstructionOperrand {
+    shared_ptr<map<string, shared_ptr<InstructionOperrand>>> operrand;
+
+    InstructionObjectOperrand(shared_ptr<map<string, shared_ptr<InstructionOperrand>>> fields) { this->operrand = fields; };
+
+    string tostring() override {
+        string str = "object: ";
+
+        for (pair<string, shared_ptr<InstructionOperrand>> op: *operrand) {
+            str += op.first + ": " + op.second->tostring() + " \n";
+        }
+ 
+        return str;
+    }
+};
+
 struct ScopeMember {
     shared_ptr<InstructionOperrand> value;
     bool isLocal;

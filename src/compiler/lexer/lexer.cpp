@@ -32,6 +32,10 @@ string getTokenTypeString(int type) {
             return "LSQUARE_BRACKET";
         case RSQUARE_BRACKET:
             return "RSQUARE_BRACKET";
+        case LOBJECT_BRACKET:
+            return "LOBJECT_BRACKET";
+        case ROBJECT_BRACKET:
+            return "ROBJECT_BRACKET";
         case COMMA:
             return "COMMA";
         case DOT:
@@ -93,8 +97,8 @@ string getTokenTypeString(int type) {
     }
 }
 
-bool compareTokens(Token first, Token second) {
-    return first.getPosition() < second.getPosition();
+bool compareTokens(Token* first, Token* second) {
+    return first->getPosition() < second->getPosition();
 }
 
 Lexer::Lexer(string code) {
@@ -114,6 +118,9 @@ Lexer::Lexer(string code) {
 
         make_pair("\\[", LSQUARE_BRACKET),
         make_pair("\\]", RSQUARE_BRACKET),
+
+        make_pair("\\{", LOBJECT_BRACKET),
+        make_pair("\\}", ROBJECT_BRACKET),
 
         make_pair(",", COMMA),
         make_pair("\\.", DOT),
@@ -155,7 +162,7 @@ Lexer::Lexer(string code) {
     };
 }
 
-vector<Token> Lexer::tokenize(bool logs) {
+vector<Token*> Lexer::tokenize(bool logs) {
     vector<TokenPositionBusy> busy;
 
     for (pair<string, TokenType> v: _tokenTypesPatterns) {
@@ -196,22 +203,28 @@ vector<Token> Lexer::tokenize(bool logs) {
 
             busy.push_back(p);
 
-            Token token(str, tokenTypeDynamic, pos, endPos);
+            Token* token = new Token(str, tokenTypeDynamic, pos, endPos);
 
             _tokens.push_back(token);
         }
     }
 
-    vector<Token> tokens = {};
-    copy_if(_tokens.begin(), _tokens.end(), std::back_inserter(tokens), [](Token token) {
-        return token.getType() != WHITESPACE && token.getType() != NEWLINE;
+    vector<Token*> tokens;
+    copy_if(_tokens.begin(), _tokens.end(), std::back_inserter(tokens), [](Token* token) {
+        return token->getType() != WHITESPACE && token->getType() != NEWLINE;
     });
 
     sort(tokens.begin(), tokens.end(), compareTokens);
 
+    for (Token* token: tokens) {
+        if (token->getType() == STRING) {
+            token->value = token->value.substr(1, token->value.length() - 2);
+        }
+    }
+
     if (logs) {
-        for (Token v: tokens) {
-            cout << " [ " + getTokenTypeString(v.getType()) + " ] [ " + v.getValue() + " ] [ " + to_string(v.getPosition()) + " ] [ " + to_string(v.getEndPosition()) + " ] " << endl;
+        for (Token* v: tokens) {
+            cout << " [ " + getTokenTypeString(v->getType()) + " ] [ " + v->value + " ] [ " + to_string(v->getPosition()) + " ] [ " + to_string(v->getEndPosition()) + " ] " << endl;
         }
     }
 

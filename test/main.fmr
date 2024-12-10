@@ -1,16 +1,18 @@
+obj := {
+    foo := 5,
+    bar := 6,
 
-fn foo():
-    return [
-        fn():
-            return 5
-        end
-    ]
-end
+    m := fn():
+        return 'string'
+    end
+}
 
-array := foo()
+output obj.m()
 
-output array[0]()
+delay 1
 
-array[0] := 'string'
+output obj.foo
 
-output array[0]
+delay 2
+
+output obj.foo * obj.bar

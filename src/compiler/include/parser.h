@@ -15,12 +15,12 @@ struct AstNode {
 
 struct UnaryOperationNode : AstNode {
     AstNode* operrand;
-    Token operatorToken;
+    Token* operatorToken;
 
     UnaryOperationNode() = default;
 
     string tostr() override {
-        return "[ unary: " + operatorToken.getValue() + ": " + operrand->tostr() + " ]";
+        return "[ unary: " + operatorToken->value + ": " + operrand->tostr() + " ]";
     }
 };
 
@@ -38,11 +38,11 @@ struct ArgsNode : AstNode {
 };
 
 struct LiteralNode : AstNode {
-    Token token;
+    Token* token;
     LiteralNode() = default;
 
     string tostr() override {
-        return "[ literal: " + token.getValue() + " ]";
+        return "[ literal: " + token->value + " ]";
     }
 };
 
@@ -64,33 +64,33 @@ struct BlockNode : AstNode {
 struct BinaryOperationNode : AstNode {
     AstNode* left;
     AstNode* right;
-    Token operatorToken;
+    Token* operatorToken;
 
     BinaryOperationNode() = default;
 
     string tostr() override {
-        return "[ binary: "  + left->tostr() + " " + operatorToken.getValue() + " " + right->tostr() + " ]";
+        return "[ binary: "  + left->tostr() + " " + operatorToken->value + " " + right->tostr() + " ]";
     }
 };
 
 struct ConditionNode : AstNode {
     AstNode* left;
     AstNode* right;
-    Token operatorToken;
+    Token* operatorToken;
 
     ConditionNode() = default;
 
     string tostr() override {
-        return "[ condition: "  + left->tostr() + " " + operatorToken.getValue() + " " + right->tostr() + " ]";
+        return "[ condition: "  + left->tostr() + " " + operatorToken->value + " " + right->tostr() + " ]";
     }
 };
 
 struct IdentifierNode : AstNode {
-    Token token;
+    Token* token;
     IdentifierNode() = default;
 
     string tostr() override {
-        return "[ id: " + token.getValue() + " ]";
+        return "[ id: " + token->value + " ]";
     }
 };
 
@@ -146,6 +146,16 @@ struct ArrayNode : AstNode {
     };
 };
 
+struct ObjectNode : AstNode {
+    map<AstNode*, AstNode*> fields;
+
+    ObjectNode() = default;
+
+    string tostr() override {
+        return "[ object, fields: " + to_string(fields.size()) + " ]";
+    };
+};
+
 struct IndexationNode : AstNode {
     AstNode* index;
     AstNode* where;
@@ -172,7 +182,7 @@ struct IfStatementNode : AstNode {
 
 class Parser {
     private:
-        vector<Token> _tokens;
+        vector<Token*> _tokens;
         int _position;
 
         vector<TokenType> unaryOperationsTokens;
@@ -180,12 +190,12 @@ class Parser {
         vector<TokenType> literalTokens;
         vector<TokenType> conditionTokens;
     public: 
-        Parser(vector<Token> tokens);
+        Parser(vector<Token*> tokens);
         BlockNode* parse();
 
         bool match(vector<TokenType> tokenTypes);
         bool lookMatch(vector<TokenType> tokenTypes, int offset);
-        Token eat(vector<TokenType> tokenTypes);
+        Token* eat(vector<TokenType> tokenTypes);
 
         AstNode* repeat(AstNode* node, bool onlyAtom = false);
         
@@ -208,6 +218,7 @@ class Parser {
         ArgsNode* parseArgs();
         UnaryOperationNode* parseUnaryOperation();
         ArrayNode* parseArray();
+        ObjectNode* parseObject();
         IndexationNode* parseIndexation(AstNode* where);
 
         AssignmentNode* parseAssignment(AstNode* left);

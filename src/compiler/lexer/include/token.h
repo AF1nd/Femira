@@ -20,6 +20,9 @@ enum TokenType {
 
     LSQUARE_BRACKET,
     RSQUARE_BRACKET,
+
+    LOBJECT_BRACKET,
+    ROBJECT_BRACKET,
     
     COMMA, 
     DOT, 
@@ -56,15 +59,15 @@ enum TokenType {
 
 class Token {
     private:
-        string _value;
         TokenType _type;
         int _position;
         int _endPosition;
     public:
+        string value;
+
         Token(string value, TokenType type, int position, int endPosition);
         Token() = default;
         
-        string getValue();
         TokenType getType();
 
         int getPosition();

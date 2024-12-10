@@ -9,7 +9,7 @@
 
 using namespace std;
 
-Parser::Parser(vector<Token> tokens) {
+Parser::Parser(vector<Token*> tokens) {
     _tokens = tokens;
     _position = 0;
 
@@ -47,7 +47,7 @@ Parser::Parser(vector<Token> tokens) {
     };
 }
 
-Token Parser::eat(vector<TokenType> tokenTypes) {
+Token* Parser::eat(vector<TokenType> tokenTypes) {
     vector<string> types = {};
 
     for (TokenType v: tokenTypes) {
@@ -64,20 +64,20 @@ Token Parser::eat(vector<TokenType> tokenTypes) {
         throw runtime_error("In the end of file expected token: " + expectedStr);
     }
     
-    Token currentToken = _tokens.at(_position);
-    if (find(tokenTypes.begin(), tokenTypes.end(), currentToken.getType()) != tokenTypes.end()) {
+    Token* currentToken = _tokens.at(_position);
+    if (find(tokenTypes.begin(), tokenTypes.end(), currentToken->getType()) != tokenTypes.end()) {
         _position++;
         return currentToken;
     }
 
-    throw runtime_error("Unexpected token type, expected: " + expectedStr + ", given: " + getTokenTypeString(currentToken.getType()) + ", position: " + to_string(_position));
+    throw runtime_error("Unexpected token type, expected: " + expectedStr + ", given: " + getTokenTypeString(currentToken->getType()) + ", position: " + to_string(_position));
 }
 
 bool Parser::match(vector<TokenType> tokenTypes) {
     if (_position >= _tokens.size()) return false;
     
-    Token currentToken = _tokens.at(_position);
-    if (find(tokenTypes.begin(), tokenTypes.end(), currentToken.getType()) != tokenTypes.end()) {
+    Token* currentToken = _tokens.at(_position);
+    if (find(tokenTypes.begin(), tokenTypes.end(), currentToken->getType()) != tokenTypes.end()) {
         return true;
     }
 
@@ -89,8 +89,8 @@ bool Parser::lookMatch(vector<TokenType> tokenTypes, int offset) {
 
     if (position >= _tokens.size()) return false;
     
-    Token currentToken = _tokens.at(position);
-    if (find(tokenTypes.begin(), tokenTypes.end(), currentToken.getType()) != tokenTypes.end()) {
+    Token* currentToken = _tokens.at(position);
+    if (find(tokenTypes.begin(), tokenTypes.end(), currentToken->getType()) != tokenTypes.end()) {
         return true;
     }
 
@@ -119,21 +119,21 @@ BlockNode* Parser::parse() {
 AstNode* Parser::repeat(AstNode* node, bool onlyAtom) {
     AstNode* newNode = nullptr;
 
-    while (match(binaryOperationsTokens) && !onlyAtom) {
+    if (match(binaryOperationsTokens) && !onlyAtom) {
         newNode = parseBinaryOperation(node);
     }
 
-    while (match({ LSQUARE_BRACKET }) && !newNode) {
+    if (match({ LSQUARE_BRACKET, DOT }) && !newNode) {
         newNode = parseIndexation(node);
     }
 
-    while (match({ LBRACKET }) && !newNode) newNode = parseCall(node);
+    if (match({ LBRACKET }) && !newNode) newNode = parseCall(node);
     
-    while (match(conditionTokens) && !newNode) {
+    if (match(conditionTokens) && !newNode) {
         newNode = parseCondition(node);
     }
 
-    while (match({ ASSIGN }) && !newNode) {
+    if (match({ ASSIGN }) && !newNode) {
         newNode = parseAssignment(node);
     }
 
@@ -158,6 +158,7 @@ AstNode* Parser::parseExpression(bool onlyAtom, bool noParenthisized) {
     if (match(unaryOperationsTokens) && !node) {
         node = parseUnaryOperation();
     };
+    if (match({ LOBJECT_BRACKET }) && !node) node = parseObject();
     if (match({ IF }) && !node) node = parseIfStatement();
     if (match({ LBRACKET }) && !node) {
         if (!noParenthisized) node = parseParenthisized(onlyAtom, noParenthisized);
@@ -179,22 +180,55 @@ AstNode* Parser::parseExpression(bool onlyAtom, bool noParenthisized) {
     return node;
 }
 
+
+ObjectNode* Parser::parseObject() {
+    eat({ LOBJECT_BRACKET });
+
+    map<AstNode*, AstNode*> fields;
+
+    while (!match({ ROBJECT_BRACKET })) {
+        if (!fields.empty()) eat({ COMMA, SEMICOLON });
+
+        AstNode* expr = parseExpression();
+        if (auto assignment = dynamic_cast<AssignmentNode*>(expr)) {
+            fields.insert({ assignment->id, assignment->value });
+        } else break;
+    }
+
+    eat({ ROBJECT_BRACKET });
+
+    ObjectNode* node = new ObjectNode();
+    node->fields = fields;
+
+    return node;
+}
+
 IndexationNode* Parser::parseIndexation(AstNode* where) {
-    eat({ LSQUARE_BRACKET });
+    bool isSquarable = false;
+    if (match({ LSQUARE_BRACKET })) isSquarable = true;
 
-    AstNode* index = parseExpression();
+    eat({ LSQUARE_BRACKET, DOT });
 
-    eat({ RSQUARE_BRACKET });
+    AstNode* index = isSquarable ? parseExpression() : parseIdentifier();
+
+    if (isSquarable) eat({ RSQUARE_BRACKET });
 
     IndexationNode* node = new IndexationNode();
     node->index = index;
     node->where = where;
 
+    if (auto identifier = dynamic_cast<IdentifierNode*>(index)) {
+        LiteralNode* literal = new LiteralNode();
+        literal->token = new Token(identifier->token->value, STRING, identifier->token->getPosition(), identifier->token->getEndPosition());
+
+        node->index = literal;
+    }
+
     return node;
 }
 
 ConditionNode* Parser::parseCondition(AstNode* left) {
-    Token operatorToken = eat(conditionTokens);
+    Token* operatorToken = eat(conditionTokens);
 
     AstNode* right = parseExpression();
 
@@ -283,7 +317,7 @@ ParenthisizedNode* Parser::parseParenthisized(bool onlyAtom, bool noParenthisize
 }
 
 LiteralNode* Parser::parseLiteral() {
-    Token token = eat(literalTokens);
+    Token* token = eat(literalTokens);
 
     LiteralNode* node = new LiteralNode();
     node->token = token;
@@ -292,7 +326,7 @@ LiteralNode* Parser::parseLiteral() {
 }
 
 UnaryOperationNode* Parser::parseUnaryOperation() {
-    Token operatorToken = eat(unaryOperationsTokens);
+    Token* operatorToken = eat(unaryOperationsTokens);
     AstNode* expr = parseExpression();
 
     UnaryOperationNode* node = new UnaryOperationNode();
@@ -303,12 +337,12 @@ UnaryOperationNode* Parser::parseUnaryOperation() {
 }
 
 BlockNode* Parser::parseBlock() {
-    Token begin = eat({ BEGIN });
+    Token* begin = eat({ BEGIN });
 
     vector<AstNode*> blockNodes = {};
     BlockNode* block = new BlockNode();
 
-    while (_tokens.at(_position).getType() != END) {
+    while (_tokens.at(_position)->getType() != END) {
         AstNode* expr = parseExpression();
         if (expr == nullptr) break;
 
@@ -321,7 +355,7 @@ BlockNode* Parser::parseBlock() {
         if (match({ SEMICOLON })) eat({ SEMICOLON });
     }
 
-    Token end = eat({ END });
+    Token* end = eat({ END });
 
     block->nodes = blockNodes;
 
@@ -454,7 +488,7 @@ FnDefineNode* Parser::parseFunctionDefinition() {
 }
 
 IdentifierNode* Parser::parseIdentifier() {
-    Token token = eat({ ID });
+    Token* token = eat({ ID });
 
     IdentifierNode* node = new IdentifierNode();
     node->token = token;

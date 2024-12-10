@@ -34,15 +34,15 @@ map<ArrayNode*, shared_ptr<InstructionArrayOperrand>> arrayLinks;
 
 shared_ptr<InstructionOperrand> getOperrandFromNode(AstNode* node) {
     if (IdentifierNode* identifier = dynamic_cast<IdentifierNode*>(node)) {
-        return make_shared<InstructionStringOperrand>(identifier->token.getValue());
+        return make_shared<InstructionStringOperrand>(identifier->token->value);
     }  else if (LiteralNode* literal = dynamic_cast<LiteralNode*>(node)) {
-        Token token = literal->token;
-        TokenType literalType = token.getType();
+        Token* token = literal->token;
+        TokenType literalType = token->getType();
 
         if (literalType == NUMBER) {
-            return make_shared<InstructionNumberOperrand>(stod(token.getValue()));
+            return make_shared<InstructionNumberOperrand>(stod(token->value));
         } else if (literalType == STRING) {
-            return make_shared<InstructionStringOperrand>(token.getValue());
+            return make_shared<InstructionStringOperrand>(token->value);
         } else if (literalType == TRUE) {
             return make_shared<InstructionBoolOperrand>(true);
         } else if (literalType == FALSE) {
@@ -60,22 +60,37 @@ shared_ptr<InstructionOperrand> getOperrandFromNode(AstNode* node) {
         shared_ptr<InstructionArrayOperrand> operrand = make_shared<InstructionArrayOperrand>(elements);
 
         return operrand;
+    } else if (ObjectNode* object = dynamic_cast<ObjectNode*>(node)) {
+        shared_ptr<map<string, shared_ptr<InstructionOperrand>>> fields = make_shared<map<string, shared_ptr<InstructionOperrand>>>();
+
+        for (pair<AstNode*, AstNode*> field: object->fields) {
+            shared_ptr<InstructionOperrand> index = getOperrandFromNode(field.first);
+            shared_ptr<InstructionOperrand> value = getOperrandFromNode(field.second);
+            
+            if (auto indexCasted = dynamic_pointer_cast<InstructionStringOperrand>(index)) {
+                fields->insert({ indexCasted->operrand, value });
+            }
+        }
+
+        return make_shared<InstructionObjectOperrand>(fields);
     } else if (FnDefineNode* fnDefine = dynamic_cast<FnDefineNode*>(node)) {
         vector<string> argsIds;
 
         for (AstNode* arg: fnDefine->args->nodes) {
-            if (IdentifierNode* id = dynamic_cast<IdentifierNode*>(arg)) argsIds.push_back(id->token.getValue());
+            if (IdentifierNode* id = dynamic_cast<IdentifierNode*>(arg)) argsIds.push_back(id->token->value);
             else throw runtime_error("Compile error! Argument in function define statement must be a identifier");
         }
 
         BytecodeGenerator bgen(fnDefine->block);
 
         shared_ptr<InstructionFunctionOperrand> operrand;
-        if (!fnDefine->isLambda) operrand = make_shared<InstructionFunctionOperrand>(FuncDeclaration(bgen.generate(), argsIds, fnDefine->id->token.getValue()));
+        if (!fnDefine->isLambda) operrand = make_shared<InstructionFunctionOperrand>(FuncDeclaration(bgen.generate(), argsIds, fnDefine->id->token->value));
         else operrand = make_shared<InstructionFunctionOperrand>(FuncDeclaration(bgen.generate(), argsIds));
 
         return operrand;
     }
+
+    throw runtime_error("Compile error! Node " + node->tostr() + " can't return operrand");
 
     return nullptr;
 }
@@ -85,8 +100,8 @@ void BytecodeGenerator::visitNode(AstNode* node) {
         for (AstNode* node: block->nodes) visitNode(node);
     } else {
         if (BinaryOperationNode* binary = dynamic_cast<BinaryOperationNode*>(node)) {
-            Token operatorToken = binary->operatorToken;
-            TokenType operatorType = operatorToken.getType();
+            Token* operatorToken = binary->operatorToken;
+            TokenType operatorType = operatorToken->getType();
 
             visitNode(binary->left);
             visitNode(binary->right);
@@ -100,8 +115,8 @@ void BytecodeGenerator::visitNode(AstNode* node) {
 
             bytecode.push_back(instr);
         } else if (ConditionNode* condition = dynamic_cast<ConditionNode*>(node)) {
-            Token operatorToken = condition->operatorToken;
-            TokenType operatorType = operatorToken.getType();
+            Token* operatorToken = condition->operatorToken;
+            TokenType operatorType = operatorToken->getType();
 
             visitNode(condition->left);
             visitNode(condition->right);
@@ -123,7 +138,7 @@ void BytecodeGenerator::visitNode(AstNode* node) {
             AstNode* id = assignment->id;
             if (IdentifierNode* identifier = dynamic_cast<IdentifierNode*>(id)) {
                 visitNode(assignment->value);
-                bytecode.push_back(Instruction(Bytecode(F_SETGLOBAL), make_shared<InstructionStringOperrand>(identifier->token.getValue())));
+                bytecode.push_back(Instruction(Bytecode(F_SETGLOBAL), make_shared<InstructionStringOperrand>(identifier->token->value)));
             } else if (IndexationNode* indexation = dynamic_cast<IndexationNode*>(id)) {
                 visitNode(indexation->where);
                 visitNode(assignment->value);
@@ -150,16 +165,14 @@ void BytecodeGenerator::visitNode(AstNode* node) {
                 IfStatement(bgen.generate())
             )));
         } else if (UnaryOperationNode* unary = dynamic_cast<UnaryOperationNode*>(node)) {
-            Token token = unary->operatorToken;
-            TokenType unaryType = token.getType();
+            Token* token = unary->operatorToken;
+            TokenType unaryType = token->getType();
 
             if (unaryType == USING) {
                 AstNode* operrand = unary->operrand;
                 if (LiteralNode* operrandCasted = dynamic_cast<LiteralNode*>(operrand)) {
-                    if (operrandCasted->token.getType() == STRING) {
-                        string path = operrandCasted->token.getValue();
-                        path = path.substr(1, path.length() - 2);
-
+                    if (operrandCasted->token->getType() == STRING) {
+                        string path = operrandCasted->token->value;
                         string code = readFile(path);
 
                         Compiler newCompiler;
@@ -188,7 +201,7 @@ void BytecodeGenerator::visitNode(AstNode* node) {
         } else if (FnDefineNode* fnDefine = dynamic_cast<FnDefineNode*>(node)) {
             bytecode.push_back(Instruction(Bytecode(F_PUSH), getOperrandFromNode(fnDefine)));
 
-            if (!fnDefine->isLambda) bytecode.push_back(Instruction(Bytecode(F_SETGLOBAL), make_shared<InstructionStringOperrand>(fnDefine->id->token.getValue())));
+            if (!fnDefine->isLambda) bytecode.push_back(Instruction(Bytecode(F_SETGLOBAL), make_shared<InstructionStringOperrand>(fnDefine->id->token->value)));
         } else if (CallNode* call = dynamic_cast<CallNode*>(node)) {
             reverse(call->args->nodes.begin(), call->args->nodes.end());
             
@@ -201,6 +214,8 @@ void BytecodeGenerator::visitNode(AstNode* node) {
             bytecode.push_back(Instruction(Bytecode(F_CALL)));
         } else if (ArrayNode* array = dynamic_cast<ArrayNode*>(node)) {
             bytecode.push_back(Instruction(Bytecode(F_PUSH), getOperrandFromNode(array)));
+        } else if (ObjectNode* object = dynamic_cast<ObjectNode*>(node)) {
+            bytecode.push_back(Instruction(Bytecode(F_PUSH), getOperrandFromNode(object)));
         } else if (IndexationNode* indexation = dynamic_cast<IndexationNode*>(node)) {
             visitNode(indexation->where);
             visitNode(indexation->index);

@@ -5,6 +5,7 @@
 #include <string>
 #include <chrono>
 #include <thread>
+#include <math.h>
 
 #include "include/fvm.h"
 
@@ -63,6 +64,12 @@ string opcodeToString(Bytecode opcode) {
     return "unknown";
 };
 
+bool isDoubleInt(double trouble) {
+   double absolute = abs(trouble);
+
+   return absolute == floor(absolute);
+}
+
 bool binaryNumbersCondition(shared_ptr<InstructionOperrand> one, shared_ptr<InstructionOperrand> two, Bytecode opcode) {
     auto oneCasted = dynamic_pointer_cast<InstructionNumberOperrand>(one);
     auto twoCasted = dynamic_pointer_cast<InstructionNumberOperrand>(two);
@@ -104,29 +111,44 @@ bool FVM::run(vector<Instruction> bytecode, shared_ptr<Scope> scope, shared_ptr<
             case F_INDEXATION:
                 {
                     shared_ptr<InstructionOperrand> index = pop();
-                    shared_ptr<InstructionOperrand> array = pop();
+                    shared_ptr<InstructionOperrand> where = pop();
 
-                    if (auto casted = dynamic_pointer_cast<InstructionArrayOperrand>(array)) {
+                    if (auto casted = dynamic_pointer_cast<InstructionArrayOperrand>(where)) {
                         if (auto indexCasted = dynamic_pointer_cast<InstructionNumberOperrand>(index)) {
+                            double indexOperrand = indexCasted->operrand;
+                            if (!isDoubleInt(indexOperrand)) throw runtime_error("FVM: ARRAY INDEX MUST BE A INTEGER");
+
                             shared_ptr<vector<shared_ptr<InstructionOperrand>>> elements = casted->operrand;
-                            if (elements->size() - 1 >= indexCasted->operrand) {
-                                auto val = elements->at(indexCasted->operrand);
+                            if (elements->size() - 1 >= indexOperrand) {
+                                auto val = elements->at(indexOperrand);
                                 push(val);
                             } else push(make_shared<InstructionNullOperrand>());
-                        }
-                    }
+                        } else throw runtime_error("FVM: ARRAY CAN BE INDEXED ONLY WITH INTEGERS");
+                    } else if (auto casted = dynamic_pointer_cast<InstructionObjectOperrand>(where)) {
+                        if (auto indexCasted = dynamic_pointer_cast<InstructionStringOperrand>(index)) {
+                            shared_ptr<map<string, shared_ptr<InstructionOperrand>>> fields = casted->operrand;
+                            auto val = fields->at(indexCasted->operrand);
+                            if (val == nullptr) val = make_shared<InstructionNullOperrand>();
+                            push(val);
+                        } else throw runtime_error("FVM: INDEX FOR OBJECT INDEXATION MUST BE A STRING");
+                    } else throw runtime_error("FVM: UNABLE TO INDEX UNKNOWN OPERRAND");
                 }
                 break;
             case F_SETINDEX:
                 {
                     shared_ptr<InstructionOperrand> index = pop();
                     shared_ptr<InstructionOperrand> value = pop();
-                    shared_ptr<InstructionOperrand> array = pop();
+                    shared_ptr<InstructionOperrand> where = pop();
 
-                    if (auto casted = dynamic_pointer_cast<InstructionArrayOperrand>(array)) {
+                    if (auto casted = dynamic_pointer_cast<InstructionArrayOperrand>(where)) {
                         if (auto indexCasted = dynamic_pointer_cast<InstructionNumberOperrand>(index)) {
                             shared_ptr<vector<shared_ptr<InstructionOperrand>>> elements = casted->operrand;
                             (*elements)[indexCasted->operrand] = value;
+                        }
+                    } else if (auto casted = dynamic_pointer_cast<InstructionObjectOperrand>(where)) {
+                        if (auto indexCasted = dynamic_pointer_cast<InstructionStringOperrand>(index)) {
+                            shared_ptr<map<string, shared_ptr<InstructionOperrand>>> fields = casted->operrand;
+                            (*fields)[indexCasted->operrand] = value;
                         }
                     }
                 }
