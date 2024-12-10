@@ -28,7 +28,6 @@ end
 else:
    ..code
 end
-
 ```
 
 objects:
