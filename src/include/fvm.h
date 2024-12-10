@@ -13,8 +13,9 @@ using namespace std;
 
 enum Bytecode {
     F_PUSH,
-    F_SETGLOBAL,
-    F_GETGLOBAL,
+
+    F_SETENV,
+    F_GETENV,
 
     F_LOADIFST,
     F_CALL,

@@ -5,15 +5,20 @@ person := {
     },
 
     getAge := fn():
-        return this.data.age
+        return self.data.age
     end,
 
     getUID := fn():
-        return this.data.uid
+        return self.data.uid
     end
 }
 
-output person["data"]['age']
+output person.getAge()
+
+fn foo(p):
+    p.data.age := 5
+end 
+
+foo(person)
 
 output person.getAge()
-output person.getUID()

@@ -71,7 +71,7 @@ shared_ptr<InstructionOperrand> getOperrandFromNode(AstNode* node) {
             
             if (auto indexCasted = dynamic_pointer_cast<InstructionStringOperrand>(index)) {
                 if (auto funcOperrand = dynamic_pointer_cast<InstructionFunctionOperrand>(value)) {
-                    funcOperrand->operrand.bytecode.insert(funcOperrand->operrand.bytecode.begin(), Instruction(Bytecode(F_SETGLOBAL), make_shared<InstructionStringOperrand>("this")));
+                    funcOperrand->operrand.bytecode.insert(funcOperrand->operrand.bytecode.begin(), Instruction(Bytecode(F_SETENV), make_shared<InstructionStringOperrand>("self")));
                     funcOperrand->operrand.bytecode.insert(funcOperrand->operrand.bytecode.begin(), Instruction(Bytecode(F_PUSH), operrand));
                 }
                 fields->insert({ indexCasted->operrand, value });
@@ -144,7 +144,7 @@ void BytecodeGenerator::visitNode(AstNode* node) {
             AstNode* id = assignment->id;
             if (IdentifierNode* identifier = dynamic_cast<IdentifierNode*>(id)) {
                 visitNode(assignment->value);
-                bytecode.push_back(Instruction(Bytecode(F_SETGLOBAL), make_shared<InstructionStringOperrand>(identifier->token->value)));
+                bytecode.push_back(Instruction(Bytecode(F_SETENV), make_shared<InstructionStringOperrand>(identifier->token->value)));
             } else if (IndexationNode* indexation = dynamic_cast<IndexationNode*>(id)) {
                 visitNode(indexation->where);
                 visitNode(assignment->value);
@@ -201,13 +201,13 @@ void BytecodeGenerator::visitNode(AstNode* node) {
             else if (unaryType == DELAY) bytecode.push_back(Instruction(Bytecode(F_DELAY)));
             else if (unaryType == OUTPUT) bytecode.push_back(Instruction(Bytecode(F_OUTPUT)));
         } else if (IdentifierNode* identifier = dynamic_cast<IdentifierNode*>(node)) {
-            bytecode.push_back(Instruction(Bytecode(F_GETGLOBAL), getOperrandFromNode(identifier)));
+            bytecode.push_back(Instruction(Bytecode(F_GETENV), getOperrandFromNode(identifier)));
         } else if (ParenthisizedNode* parenthisized = dynamic_cast<ParenthisizedNode*>(node)) {
             visitNode(parenthisized->wrapped);
         } else if (FnDefineNode* fnDefine = dynamic_cast<FnDefineNode*>(node)) {
             bytecode.push_back(Instruction(Bytecode(F_PUSH), getOperrandFromNode(fnDefine)));
 
-            if (!fnDefine->isLambda) bytecode.push_back(Instruction(Bytecode(F_SETGLOBAL), make_shared<InstructionStringOperrand>(fnDefine->id->token->value)));
+            if (!fnDefine->isLambda) bytecode.push_back(Instruction(Bytecode(F_SETENV), make_shared<InstructionStringOperrand>(fnDefine->id->token->value)));
         } else if (CallNode* call = dynamic_cast<CallNode*>(node)) {
             reverse(call->args->nodes.begin(), call->args->nodes.end());
             

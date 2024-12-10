@@ -15,9 +15,9 @@ string opcodeToString(Bytecode opcode) {
     switch (opcode) {
         case F_PUSH:
             return "PUSH";
-        case F_SETGLOBAL:
-            return "SETGLOBAL";
-        case F_GETGLOBAL:
+        case F_SETENV:
+            return "SETENV";
+        case F_GETENV:
             return "GETGLOBAL";
         case F_CALL:
             return "CALL";
@@ -239,7 +239,7 @@ bool FVM::run(vector<Instruction> bytecode, shared_ptr<Scope> scope, shared_ptr<
                     run(funcDeclar.bytecode, newScope, funcDeclar.scope);
                 }
                 break;
-            case F_SETGLOBAL:
+            case F_SETENV:
                 {
                     auto adr = dynamic_pointer_cast<InstructionStringOperrand>(code.operrand.value());
                     auto val = pop();
@@ -250,7 +250,7 @@ bool FVM::run(vector<Instruction> bytecode, shared_ptr<Scope> scope, shared_ptr<
                     else throw runtime_error("FVM: FOR SETVAR EXPECTED ADDRESS (OPERRAND 1)");
                 }
                 break;
-            case F_GETGLOBAL:
+            case F_GETENV:
                 {
                     auto adr = dynamic_pointer_cast<InstructionStringOperrand>(code.operrand.value());
                     if (adr) {
