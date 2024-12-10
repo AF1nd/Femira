@@ -1,8 +1,9 @@
+fn factorial(n):
+    if n == 1:
+        return n
+    end
+    
+    return factorial(n - 1) * n
+end
 
-a := [1, ['a', ['b', 'z']], 3]
-
-output a[1][1][1]
-
-a[1][1][1] := 'b'
-
-output a[1][1][1]
+output factorial(5)

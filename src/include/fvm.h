@@ -169,7 +169,7 @@ struct InstructionIfStatementLoadOperrand : InstructionOperrand {
     InstructionIfStatementLoadOperrand(IfStatement operrand) { this->operrand = operrand; };
 
     string tostring() const override {
-        return "IF_STMNT";
+        return "IF";
     }
 };
 
@@ -189,7 +189,14 @@ struct InstructionArrayOperrand : InstructionOperrand {
     }
 };
 
-using ScopeMember = variant<shared_ptr<InstructionOperrand>, FuncDeclaration>;
+struct ScopeMember {
+    variant<shared_ptr<InstructionOperrand>, FuncDeclaration> value;
+    bool isLocal;
+
+    ScopeMember(variant<shared_ptr<InstructionOperrand>, FuncDeclaration> value, bool isLocal = false) { this->value = value; this->isLocal = isLocal; };
+    ScopeMember() = default;
+};
+
 struct Scope {
     map<string, ScopeMember> members;
 };
@@ -198,7 +205,7 @@ class FVM {
     public:
         stack<shared_ptr<InstructionOperrand>> vmStack;
   
-        void run(vector<Instruction> bytecode, shared_ptr<Scope> scope = make_shared<Scope>(), shared_ptr<Scope> parent = make_shared<Scope>());
+        bool run(vector<Instruction> bytecode, shared_ptr<Scope> scope = make_shared<Scope>(), shared_ptr<Scope> parent = make_shared<Scope>());
         FVM(bool logs);
 
         void push(shared_ptr<InstructionOperrand> operrand);

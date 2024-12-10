@@ -54,6 +54,10 @@ string opcodeToString(Bytecode opcode) {
             return "INDEXATION";
         case F_SETINDEX:
             return "SETINDEX";
+        case F_LOADIFST:
+            return "LOADIF";
+        case F_IF:
+            return "IF";
         default:
             break;
     }
@@ -79,7 +83,7 @@ FVM::FVM(bool logs) {
     this->logs = logs;
 }
 
-void FVM::run(vector<Instruction> bytecode, shared_ptr<Scope> scope, shared_ptr<Scope> parent) {
+bool FVM::run(vector<Instruction> bytecode, shared_ptr<Scope> scope, shared_ptr<Scope> parent) {
     if (logs) cout << getBytecodeString(bytecode) << endl;
 
     if (scope != nullptr && parent != nullptr) {
@@ -145,7 +149,7 @@ void FVM::run(vector<Instruction> bytecode, shared_ptr<Scope> scope, shared_ptr<
                         if (!bytecode.empty()) {
                             shared_ptr<Scope> newScope = make_shared<Scope>();
 
-                            run(bytecode, newScope, scope);
+                            if (run(bytecode, newScope, scope)) return true ;
                         }
                     }
                 }
@@ -160,16 +164,15 @@ void FVM::run(vector<Instruction> bytecode, shared_ptr<Scope> scope, shared_ptr<
                 break;
             case F_RETURN:
                 {
-                    shared_ptr<InstructionNullOperrand> val = make_shared<InstructionNullOperrand>();
-                    if (vmStack.empty()) push(val);
+                    if (vmStack.empty()) push(make_shared<InstructionNullOperrand>());
 
                     for (auto v: scope->members) {
-                        if (parent != nullptr && parent->members.find(v.first) != parent->members.end()) {
+                        if (parent != nullptr && parent->members.find(v.first) != parent->members.end() && !v.second.isLocal) {
                             parent->members[v.first] = v.second;
                         }
                     }
 
-                    return;
+                    return true;
                 }
                 break;
             case F_LOADFUNC:
@@ -182,7 +185,7 @@ void FVM::run(vector<Instruction> bytecode, shared_ptr<Scope> scope, shared_ptr<
 
                     fnDeclr.scope = scope;
 
-                    scope->members[id] = fnDeclr;
+                    scope->members[id] = ScopeMember(fnDeclr);
                 }
                 break;
             case F_CALL:
@@ -197,7 +200,7 @@ void FVM::run(vector<Instruction> bytecode, shared_ptr<Scope> scope, shared_ptr<
                     FuncDeclaration funcDeclar;
 
                     try {
-                        funcDeclar = get<FuncDeclaration>(scope->members.at(funcName));
+                        funcDeclar = get<FuncDeclaration>(scope->members.at(funcName).value);
                     }
                     catch(const exception& e) {
                         throw runtime_error("FVM: FUNCTION " + funcName + " DOESN'T EXIST");
@@ -216,7 +219,7 @@ void FVM::run(vector<Instruction> bytecode, shared_ptr<Scope> scope, shared_ptr<
                         shared_ptr<InstructionOperrand> arg = args.at(i);
                         string id = funcDeclar.argsIds.at(i);
                         
-                        newScope->members.insert({ id, arg });
+                        newScope->members.insert({ id, ScopeMember(arg, true) });
                     }
 
                     run(funcDeclar.bytecode, newScope, funcDeclar.scope);
@@ -228,7 +231,7 @@ void FVM::run(vector<Instruction> bytecode, shared_ptr<Scope> scope, shared_ptr<
                     auto val = pop();
 
                     if (adr) {
-                        scope->members[adr->operrand] = val;
+                        scope->members[adr->operrand] = ScopeMember(val);
                     }
                     else throw runtime_error("FVM: FOR SETVAR EXPECTED ADDRESS (OPERRAND 1)");
                 }
@@ -239,7 +242,7 @@ void FVM::run(vector<Instruction> bytecode, shared_ptr<Scope> scope, shared_ptr<
                     if (adr) {
                         try {
                             ScopeMember val = scope->members.at(adr->operrand);
-                            push(get<shared_ptr<InstructionOperrand>>(val));
+                            push(get<shared_ptr<InstructionOperrand>>(val.value));
                         }
                         catch (const exception& e) {
                             throw runtime_error("FVM: BY ADDRESS " + adr->operrand + " NOT FINDED ANYTHING");
@@ -368,10 +371,12 @@ void FVM::run(vector<Instruction> bytecode, shared_ptr<Scope> scope, shared_ptr<
     }
 
     for (auto v: scope->members) {
-        if (parent != nullptr && parent->members.find(v.first) != parent->members.end()) {
+        if (parent != nullptr && parent->members.find(v.first) != parent->members.end() && !v.second.isLocal) {
             parent->members[v.first] = v.second;
         }
     }
+
+    return false;
 }
 
 void FVM::push(shared_ptr<InstructionOperrand> operrand) {
