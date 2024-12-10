@@ -137,20 +137,22 @@ AstNode* Parser::parseExpression(bool onlyAtom, bool noParenthisized) {
     }
 
     if (node) {
-        if (match({ LBRACKET })) node = parseCall(node);
-        if (match(binaryOperationsTokens) && !onlyAtom) {
+        while (match({ LBRACKET })) node = parseCall(node);
+        while (match(binaryOperationsTokens) && !onlyAtom) {
             node = parseBinaryOperation(node);
         }
 
-        if (match({ LSQUARE_BRACKET })) {
+        while (match({ LSQUARE_BRACKET })) {
             node = parseIndexation(node);
         }
         
-        if (match(conditionTokens)) {
+        while (match(conditionTokens)) {
             node = parseCondition(node);
         }
 
-        if (match({ ASSIGN })) node = parseAssignment(node);
+        while (match({ ASSIGN })) {
+            node = parseAssignment(node);
+        }
     }
 
     return node;

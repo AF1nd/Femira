@@ -1,14 +1,8 @@
 
-a := [1, 'пуки каки', 3]
+a := [1, ['a', ['b', 'z']], 3]
 
-a[1] := 'kaka'
+output a[1][1][1]
 
-output a[1]
+a[1][1][1] := 'b'
 
-fn changer(array):
-    array[1] := 'faf'
-end
-
-changer(a)
-
-output a[1]
+output a[1][1][1]
