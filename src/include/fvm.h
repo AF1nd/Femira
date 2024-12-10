@@ -1,7 +1,6 @@
 #ifndef FVM_H
 #define FVM_H
 
-#include <iostream>
 #include <stack>
 #include <vector>
 #include <any>
@@ -17,7 +16,6 @@ enum Bytecode {
     F_SETGLOBAL,
     F_GETGLOBAL,
 
-    F_LOADFUNC,
     F_LOADIFST,
     F_CALL,
     F_RETURN,
@@ -51,7 +49,7 @@ enum Bytecode {
 struct InstructionOperrand {
     any operrand;
 
-    virtual string tostring() const = 0; 
+    virtual string tostring() { return "unknown"; }; 
 
     virtual bool isEq(shared_ptr<InstructionOperrand> toEq) { return false; };
 };
@@ -61,7 +59,7 @@ struct InstructionNullOperrand : InstructionOperrand {
 
     InstructionNullOperrand() = default;
 
-    string tostring() const override {
+    string tostring() override {
         return "NULL";
     }
 
@@ -77,7 +75,7 @@ struct InstructionNumberOperrand : InstructionOperrand {
 
     InstructionNumberOperrand(double operrand) { this->operrand = operrand; };
 
-    string tostring() const override {
+    string tostring() override {
         return to_string(operrand);
     }
     
@@ -92,7 +90,7 @@ struct InstructionStringOperrand : InstructionOperrand {
 
     InstructionStringOperrand(string operrand) { this->operrand = operrand; };
 
-    string tostring() const override  {
+    string tostring() override  {
         return operrand;
     }
 
@@ -107,7 +105,7 @@ struct InstructionBoolOperrand : InstructionOperrand {
 
     InstructionBoolOperrand(bool operrand) { this->operrand = operrand; };
 
-    string tostring() const override  {
+    string tostring() override  {
         string str = operrand == true ? "true" : "false";
         return str;
     }
@@ -138,9 +136,12 @@ struct FuncDeclaration {
     vector<string> argsIds;
     string id;
 
+    bool isLambda;
+
     shared_ptr<Scope> scope;
 
     FuncDeclaration(vector<Instruction> bytecode, vector<string> argsIds, string id) { this->bytecode = bytecode; this->argsIds = argsIds, this->id = id; };
+    FuncDeclaration(vector<Instruction> bytecode, vector<string> argsIds) { this->bytecode = bytecode; this->argsIds = argsIds, this->isLambda = true; };
     FuncDeclaration() = default;
 };
 
@@ -153,13 +154,14 @@ struct IfStatement {
     IfStatement() = default;
 };
 
-struct InstructionFunctionLoadOperrand : InstructionOperrand {
+struct InstructionFunctionOperrand : InstructionOperrand {
     FuncDeclaration operrand;
 
-    InstructionFunctionLoadOperrand(FuncDeclaration operrand) { this->operrand = operrand; };
+    InstructionFunctionOperrand(FuncDeclaration operrand) { this->operrand = operrand; };
+    InstructionFunctionOperrand() = default;
 
-    string tostring() const override {
-        return operrand.id;
+    string tostring() override {
+        return !this->operrand.isLambda ? this->operrand.id : "function";
     }
 };
 
@@ -168,7 +170,7 @@ struct InstructionIfStatementLoadOperrand : InstructionOperrand {
 
     InstructionIfStatementLoadOperrand(IfStatement operrand) { this->operrand = operrand; };
 
-    string tostring() const override {
+    string tostring() override {
         return "IF";
     }
 };
@@ -178,8 +180,8 @@ struct InstructionArrayOperrand : InstructionOperrand {
 
     InstructionArrayOperrand(shared_ptr<vector<shared_ptr<InstructionOperrand>>> operrand) { this->operrand = operrand; };
     
-    string tostring() const override {
-        string str;
+    string tostring() override {
+        string str = "array: ";
 
         for (shared_ptr<InstructionOperrand> op: *operrand) {
             str += op->tostring() + " ";
@@ -190,10 +192,10 @@ struct InstructionArrayOperrand : InstructionOperrand {
 };
 
 struct ScopeMember {
-    variant<shared_ptr<InstructionOperrand>, FuncDeclaration> value;
+    shared_ptr<InstructionOperrand> value;
     bool isLocal;
 
-    ScopeMember(variant<shared_ptr<InstructionOperrand>, FuncDeclaration> value, bool isLocal = false) { this->value = value; this->isLocal = isLocal; };
+    ScopeMember(shared_ptr<InstructionOperrand> value, bool isLocal = false) { this->value = value; this->isLocal = isLocal; };
     ScopeMember() = default;
 };
 
@@ -213,6 +215,8 @@ class FVM {
         shared_ptr<InstructionOperrand> pop();
 
         string getBytecodeString(vector<Instruction> bytecode);
+
+        void printStack();
 
         bool logs;
 };

@@ -18,8 +18,6 @@ string opcodeToString(Bytecode opcode) {
             return "SETGLOBAL";
         case F_GETGLOBAL:
             return "GETGLOBAL";
-        case F_LOADFUNC:
-            return "LOADFUNC";
         case F_CALL:
             return "CALL";
         case F_RETURN:
@@ -175,36 +173,15 @@ bool FVM::run(vector<Instruction> bytecode, shared_ptr<Scope> scope, shared_ptr<
                     return true;
                 }
                 break;
-            case F_LOADFUNC:
-                {
-                    if (!code.operrand.has_value()) throw runtime_error("FVM: CANNOT LOAD FUNC! NO OPERRAND");
-
-                    auto declr = dynamic_pointer_cast<InstructionFunctionLoadOperrand>(code.operrand.value());
-                    FuncDeclaration fnDeclr = declr->operrand;
-                    string id = fnDeclr.id;
-
-                    fnDeclr.scope = scope;
-
-                    scope->members[id] = ScopeMember(fnDeclr);
-                }
-                break;
             case F_CALL:
                 {
-                    if (!code.operrand.has_value()) throw runtime_error("FVM: CANNOT CALL FUNC! NO OPERRAND");
-                    auto funcId = dynamic_pointer_cast<InstructionStringOperrand>(code.operrand.value());
+                    shared_ptr<InstructionFunctionOperrand> func = dynamic_pointer_cast<InstructionFunctionOperrand>(pop());
+                    if (!func) break;
 
                     vector<shared_ptr<InstructionOperrand>> args;
 
-                    string funcName = funcId->operrand;
-
-                    FuncDeclaration funcDeclar;
-
-                    try {
-                        funcDeclar = get<FuncDeclaration>(scope->members.at(funcName).value);
-                    }
-                    catch(const exception& e) {
-                        throw runtime_error("FVM: FUNCTION " + funcName + " DOESN'T EXIST");
-                    }
+                    FuncDeclaration funcDeclar = func->operrand;
+                    string funcName = funcDeclar.id;
 
                     int argsNum = funcDeclar.argsIds.size();
 
@@ -242,7 +219,7 @@ bool FVM::run(vector<Instruction> bytecode, shared_ptr<Scope> scope, shared_ptr<
                     if (adr) {
                         try {
                             ScopeMember val = scope->members.at(adr->operrand);
-                            push(get<shared_ptr<InstructionOperrand>>(val.value));
+                            push(val.value);
                         }
                         catch (const exception& e) {
                             throw runtime_error("FVM: BY ADDRESS " + adr->operrand + " NOT FINDED ANYTHING");
@@ -384,7 +361,7 @@ void FVM::push(shared_ptr<InstructionOperrand> operrand) {
 }
 
 shared_ptr<InstructionOperrand> FVM::pop() {
-    if (vmStack.empty()) throw runtime_error("FVM: CANNOT POP FROM EMPTY STACK");
+    if (vmStack.empty() || vmStack.top() == nullptr) throw runtime_error("FVM: CANNOT POP FROM EMPTY STACK");
 
     auto top = vmStack.top();
     vmStack.pop();

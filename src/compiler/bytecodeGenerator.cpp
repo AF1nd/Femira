@@ -1,5 +1,3 @@
-
-#include <iostream>
 #include <vector>
 #include <algorithm>
 #include <fstream> 
@@ -53,19 +51,28 @@ shared_ptr<InstructionOperrand> getOperrandFromNode(AstNode* node) {
             return make_shared<InstructionNullOperrand>();
         }
     } else if (ArrayNode* array = dynamic_cast<ArrayNode*>(node)) {
-        if (arrayLinks.find(array) != arrayLinks.end()) {
-            return arrayLinks.at(array);
-        }
-
         shared_ptr<vector<shared_ptr<InstructionOperrand>>> elements = make_shared<vector<shared_ptr<InstructionOperrand>>>();
         
         for (AstNode* element: array->elements) {
             elements->push_back(getOperrandFromNode(element));
         }
 
-        shared_ptr<InstructionArrayOperrand> operrand =  make_shared<InstructionArrayOperrand>(elements);
+        shared_ptr<InstructionArrayOperrand> operrand = make_shared<InstructionArrayOperrand>(elements);
 
-        arrayLinks.insert({array, operrand});
+        return operrand;
+    } else if (FnDefineNode* fnDefine = dynamic_cast<FnDefineNode*>(node)) {
+        vector<string> argsIds;
+
+        for (AstNode* arg: fnDefine->args->nodes) {
+            if (IdentifierNode* id = dynamic_cast<IdentifierNode*>(arg)) argsIds.push_back(id->token.getValue());
+            else throw runtime_error("Compile error! Argument in function define statement must be a identifier");
+        }
+
+        BytecodeGenerator bgen(fnDefine->block);
+
+        shared_ptr<InstructionFunctionOperrand> operrand;
+        if (!fnDefine->isLambda) operrand = make_shared<InstructionFunctionOperrand>(FuncDeclaration(bgen.generate(), argsIds, fnDefine->id->token.getValue()));
+        else operrand = make_shared<InstructionFunctionOperrand>(FuncDeclaration(bgen.generate(), argsIds));
 
         return operrand;
     }
@@ -179,18 +186,9 @@ void BytecodeGenerator::visitNode(AstNode* node) {
         } else if (ParenthisizedNode* parenthisized = dynamic_cast<ParenthisizedNode*>(node)) {
             visitNode(parenthisized->wrapped);
         } else if (FnDefineNode* fnDefine = dynamic_cast<FnDefineNode*>(node)) {
-            vector<string> argsIds;
+            bytecode.push_back(Instruction(Bytecode(F_PUSH), getOperrandFromNode(fnDefine)));
 
-            for (AstNode* arg: fnDefine->args->nodes) {
-                if (IdentifierNode* id = dynamic_cast<IdentifierNode*>(arg)) argsIds.push_back(id->token.getValue());
-                else throw runtime_error("Compile error! Argument in function define statement must be a identifier");
-            }
-
-            BytecodeGenerator bgen(fnDefine->block);
-            
-            bytecode.push_back(Instruction(Bytecode(F_LOADFUNC), make_shared<InstructionFunctionLoadOperrand>(
-                FuncDeclaration(bgen.generate(), argsIds, fnDefine->id->token.getValue())
-            )));
+            if (!fnDefine->isLambda) bytecode.push_back(Instruction(Bytecode(F_SETGLOBAL), make_shared<InstructionStringOperrand>(fnDefine->id->token.getValue())));
         } else if (CallNode* call = dynamic_cast<CallNode*>(node)) {
             reverse(call->args->nodes.begin(), call->args->nodes.end());
             
@@ -198,13 +196,9 @@ void BytecodeGenerator::visitNode(AstNode* node) {
                 visitNode(arg);
             }
 
-            string fnId;
+            visitNode(call->calling);
 
-            if (IdentifierNode* calling = dynamic_cast<IdentifierNode*>(call->calling)) fnId = calling->token.getValue();
-            else if (FnDefineNode* calling = dynamic_cast<FnDefineNode*>(call->calling)) fnId = calling->id->token.getValue();
-            else throw runtime_error("Compile error! Unknown object to call");
-
-            bytecode.push_back(Instruction(Bytecode(F_CALL), make_shared<InstructionStringOperrand>(fnId)));
+            bytecode.push_back(Instruction(Bytecode(F_CALL)));
         } else if (ArrayNode* array = dynamic_cast<ArrayNode*>(node)) {
             bytecode.push_back(Instruction(Bytecode(F_PUSH), getOperrandFromNode(array)));
         } else if (IndexationNode* indexation = dynamic_cast<IndexationNode*>(node)) {

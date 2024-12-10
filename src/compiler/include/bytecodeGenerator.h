@@ -1,7 +1,6 @@
 #ifndef BGENERATOR_H
 #define BGENERATOR_H
 
-#include <iostream>
 #include <vector>
 
 #include "parser.h"

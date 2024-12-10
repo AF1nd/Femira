@@ -1,9 +1,11 @@
-#include <iostream>
 #include "include/parser.h"
 #include "lexer/include/token.h"
 #include "lexer/include/lexer.h"
+
+#include <iostream>
 #include <vector>
 #include <algorithm>
+#include <iostream>
 
 using namespace std;
 
@@ -102,12 +104,45 @@ BlockNode* Parser::parse() {
         AstNode* expr = parseExpression();
         if (expr == nullptr) break;
 
+        if (auto fndef = dynamic_cast<FnDefineNode*>(expr)) {
+            if (fndef->isLambda) throw runtime_error("Syntax error! Cannot define lambda function in block");
+        }
+
         block->nodes.push_back(expr);
 
         if (match({ SEMICOLON })) eat({ SEMICOLON });
     }
 
     return block;
+}
+
+AstNode* Parser::repeat(AstNode* node, bool onlyAtom) {
+    AstNode* newNode = nullptr;
+
+    while (match(binaryOperationsTokens) && !onlyAtom) {
+        newNode = parseBinaryOperation(node);
+    }
+
+    while (match({ LSQUARE_BRACKET }) && !newNode) {
+        newNode = parseIndexation(node);
+    }
+
+    while (match({ LBRACKET }) && !newNode) newNode = parseCall(node);
+    
+    while (match(conditionTokens) && !newNode) {
+        newNode = parseCondition(node);
+    }
+
+    while (match({ ASSIGN }) && !newNode) {
+        newNode = parseAssignment(node);
+    }
+
+    if (newNode != nullptr) {
+        AstNode* repeatNewNode = repeat(newNode, onlyAtom);
+        if (repeatNewNode) newNode = repeatNewNode;
+    }
+
+    return newNode;
 }
 
 AstNode* Parser::parseExpression(bool onlyAtom, bool noParenthisized) {
@@ -137,22 +172,8 @@ AstNode* Parser::parseExpression(bool onlyAtom, bool noParenthisized) {
     }
 
     if (node) {
-        while (match({ LBRACKET })) node = parseCall(node);
-        while (match(binaryOperationsTokens) && !onlyAtom) {
-            node = parseBinaryOperation(node);
-        }
-
-        while (match({ LSQUARE_BRACKET })) {
-            node = parseIndexation(node);
-        }
-        
-        while (match(conditionTokens)) {
-            node = parseCondition(node);
-        }
-
-        while (match({ ASSIGN })) {
-            node = parseAssignment(node);
-        }
+        AstNode* repeated = repeat(node, onlyAtom);
+        if (repeated != nullptr) node = repeated;
     }
 
     return node;
@@ -206,6 +227,11 @@ ArrayNode* Parser::parseArray() {
         AstNode* expr = parseExpression();
         if (expr != nullptr) {
             elements.push_back(expr);
+
+            if (auto fndef = dynamic_cast<FnDefineNode*>(expr)) {
+                if (!fndef->isLambda) throw runtime_error("Syntax error! Cannot define non-lambda function in array");
+            }
+
             if (match({ COMMA })) eat({ COMMA });
         }
         else break;
@@ -280,19 +306,23 @@ BlockNode* Parser::parseBlock() {
     Token begin = eat({ BEGIN });
 
     vector<AstNode*> blockNodes = {};
+    BlockNode* block = new BlockNode();
 
     while (_tokens.at(_position).getType() != END) {
-        AstNode* ptr = parseExpression();
-        if (ptr == nullptr) break;
+        AstNode* expr = parseExpression();
+        if (expr == nullptr) break;
 
-        blockNodes.push_back(ptr);
+        if (auto fndef = dynamic_cast<FnDefineNode*>(expr)) {
+            if (fndef->isLambda) throw runtime_error("Syntax error! Cannot define lambda function in block");
+        }
+
+        blockNodes.push_back(expr);
 
         if (match({ SEMICOLON })) eat({ SEMICOLON });
     }
 
     Token end = eat({ END });
 
-    BlockNode* block = new BlockNode();
     block->nodes = blockNodes;
 
     return block;
@@ -384,8 +414,12 @@ ArgsNode* Parser::parseArgs() {
     while (!match({ RBRACKET })) {
         AstNode* expr = parseExpression();
         
-        if (expr != nullptr) args.push_back(expr);
-        else break;
+        if (expr != nullptr) {
+            args.push_back(expr);
+            if (auto fndef = dynamic_cast<FnDefineNode*>(expr)) {
+                if (!fndef->isLambda) throw runtime_error("Syntax error! Cannot define non-lambda function in array");
+            }
+        } else break;
 
         if (match({ COMMA })) eat({ COMMA });
     }
@@ -401,14 +435,20 @@ ArgsNode* Parser::parseArgs() {
 FnDefineNode* Parser::parseFunctionDefinition() {
     eat({ DEF });
 
-    IdentifierNode* id = parseIdentifier();
+    IdentifierNode* id = nullptr;
+
+    if (!match({ LBRACKET })) {
+       id = parseIdentifier();
+    }
+
     ArgsNode* args = parseArgs();
     BlockNode* block = parseBlock();
 
     FnDefineNode* node = new FnDefineNode();
     node->args = args;
-    node->id = id;
+    if (id != nullptr) node->id = id;
     node->block = block;
+    node->isLambda = id == nullptr;
 
     return node;
 }

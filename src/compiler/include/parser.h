@@ -1,6 +1,7 @@
 #ifndef PARSER_H
 #define PARSER_H
 
+#include <iostream>
 #include <vector>
 #include "../lexer/include/token.h"
 #include <map>
@@ -126,6 +127,8 @@ struct FnDefineNode : AstNode {
     ArgsNode* args;
     BlockNode* block;
 
+    bool isLambda;
+
     FnDefineNode() = default;
 
     string tostr() override {
@@ -183,6 +186,8 @@ class Parser {
         bool match(vector<TokenType> tokenTypes);
         bool lookMatch(vector<TokenType> tokenTypes, int offset);
         Token eat(vector<TokenType> tokenTypes);
+
+        AstNode* repeat(AstNode* node, bool onlyAtom = false);
         
         AstNode* parseExpression(bool onlyAtom = false, bool noParenthisized = false);
         

@@ -1,9 +1,16 @@
-fn factorial(n):
-    if n == 1:
-        return n
-    end
-    
-    return factorial(n - 1) * n
+
+fn foo():
+    return [
+        fn():
+            return 5
+        end
+    ]
 end
 
-output factorial(5)
+array := foo()
+
+output array[0]()
+
+array[0] := 'string'
+
+output array[0]
