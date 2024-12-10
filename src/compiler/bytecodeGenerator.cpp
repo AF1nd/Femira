@@ -63,16 +63,22 @@ shared_ptr<InstructionOperrand> getOperrandFromNode(AstNode* node) {
     } else if (ObjectNode* object = dynamic_cast<ObjectNode*>(node)) {
         shared_ptr<map<string, shared_ptr<InstructionOperrand>>> fields = make_shared<map<string, shared_ptr<InstructionOperrand>>>();
 
+        shared_ptr<InstructionObjectOperrand> operrand = make_shared<InstructionObjectOperrand>(fields);
+
         for (pair<AstNode*, AstNode*> field: object->fields) {
             shared_ptr<InstructionOperrand> index = getOperrandFromNode(field.first);
             shared_ptr<InstructionOperrand> value = getOperrandFromNode(field.second);
             
             if (auto indexCasted = dynamic_pointer_cast<InstructionStringOperrand>(index)) {
+                if (auto funcOperrand = dynamic_pointer_cast<InstructionFunctionOperrand>(value)) {
+                    funcOperrand->operrand.bytecode.insert(funcOperrand->operrand.bytecode.begin(), Instruction(Bytecode(F_SETGLOBAL), make_shared<InstructionStringOperrand>("this")));
+                    funcOperrand->operrand.bytecode.insert(funcOperrand->operrand.bytecode.begin(), Instruction(Bytecode(F_PUSH), operrand));
+                }
                 fields->insert({ indexCasted->operrand, value });
             }
         }
 
-        return make_shared<InstructionObjectOperrand>(fields);
+        return operrand;
     } else if (FnDefineNode* fnDefine = dynamic_cast<FnDefineNode*>(node)) {
         vector<string> argsIds;
 

@@ -105,7 +105,9 @@ Lexer::Lexer(string code) {
     _code = code;
 
     _tokenTypesPatterns = {
-        make_pair("'[^']*'", STRING),
+        make_pair("\".+?\"", STRING),
+        make_pair("\'.+?\'", STRING),
+
         make_pair("true", TRUE),
         make_pair("false", FALSE),
         make_pair("null", NULLT),

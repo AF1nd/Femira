@@ -120,15 +120,30 @@ bool FVM::run(vector<Instruction> bytecode, shared_ptr<Scope> scope, shared_ptr<
 
                             shared_ptr<vector<shared_ptr<InstructionOperrand>>> elements = casted->operrand;
                             if (elements->size() - 1 >= indexOperrand) {
-                                auto val = elements->at(indexOperrand);
+                                shared_ptr<InstructionOperrand> val;
+
+                                try {
+                                    val = elements->at(indexOperrand);
+                                }
+                                catch(const std::exception& e) {
+                                    val = make_shared<InstructionNullOperrand>();  
+                                }
+
                                 push(val);
                             } else push(make_shared<InstructionNullOperrand>());
                         } else throw runtime_error("FVM: ARRAY CAN BE INDEXED ONLY WITH INTEGERS");
                     } else if (auto casted = dynamic_pointer_cast<InstructionObjectOperrand>(where)) {
                         if (auto indexCasted = dynamic_pointer_cast<InstructionStringOperrand>(index)) {
                             shared_ptr<map<string, shared_ptr<InstructionOperrand>>> fields = casted->operrand;
-                            auto val = fields->at(indexCasted->operrand);
-                            if (val == nullptr) val = make_shared<InstructionNullOperrand>();
+                            shared_ptr<InstructionOperrand> val;
+
+                            try {
+                                val = fields->at(indexCasted->operrand);
+                            }
+                            catch(const std::exception& e) {
+                                val = make_shared<InstructionNullOperrand>();
+                            }
+
                             push(val);
                         } else throw runtime_error("FVM: INDEX FOR OBJECT INDEXATION MUST BE A STRING");
                     } else throw runtime_error("FVM: UNABLE TO INDEX UNKNOWN OPERRAND");

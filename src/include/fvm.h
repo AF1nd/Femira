@@ -197,7 +197,7 @@ struct InstructionObjectOperrand : InstructionOperrand {
     InstructionObjectOperrand(shared_ptr<map<string, shared_ptr<InstructionOperrand>>> fields) { this->operrand = fields; };
 
     string tostring() override {
-        string str = "object: ";
+        string str = "object: \n";
 
         for (pair<string, shared_ptr<InstructionOperrand>> op: *operrand) {
             str += op.first + ": " + op.second->tostring() + " \n";
