@@ -33,15 +33,25 @@ end
 objects:
 
 ```
-obj := {
-   foo := 'aa', // (or ;)
-   func := fn():
-      output 'f'
-   end
+person := {
+    data := {
+        age := 18,
+        uid := 129319,
+    },
+
+    getAge := fn():
+        return this.data.age
+    end,
+
+    getUID := fn():
+        return this.data.uid
+    end
 }
 
-obj.func()
-output obj.foo
+output person["data"]['age']
+
+output person.getAge()
+output person.getUID()
 ```
 
 arrays:
