@@ -28,6 +28,31 @@ end
 else:
    ..code
 end
+
+```
+
+objects:
+
+```
+obj := {
+   foo := 'aa'
+   func := fn():
+      output 'f'
+   end
+}
+
+obj.func()
+output obj.foo
+```
+
+arrays:
+
+```
+array := [1, 2, 3]
+
+array[0] = 'str'
+
+output array[0]
 ```
 
 ## Run program:
