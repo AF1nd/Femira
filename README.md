@@ -30,6 +30,30 @@ else:
 end
 ```
 
+objects:
+
+```
+obj := {
+   foo := 'aa', // (or ;)
+   func := fn():
+      output 'f'
+   end
+}
+
+obj.func()
+output obj.foo
+```
+
+arrays:
+
+```
+array := [1, 2, 3]
+
+array[0] = 'str'
+
+output array[0]
+```
+
 ## Run program:
 
 path/to/interpreter-file (femic.exe/femic.out) path/to/program.fmr:
